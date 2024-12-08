@@ -66,8 +66,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Linear Drive TeleOp Test", group="TeleOp")
-public class linearDriveTest extends LinearOpMode {
+@TeleOp(name="Linear Drive Sohm Test", group="TeleOp")
+public class linearDriveSohmTest extends LinearOpMode {
 
     // Declare OpMode members for each of the 4 drive motors and 3 horizontal/vertical lift motors
     private ElapsedTime runtime = new ElapsedTime();
@@ -125,19 +125,19 @@ public class linearDriveTest extends LinearOpMode {
         rightFrontDrive = hardwareMap.get(DcMotor.class, "rightFront");
         rightBackDrive = hardwareMap.get(DcMotor.class, "rightBack");
 
-        upDrive1 = hardwareMap.get(DcMotor.class, "verticalRight");
-        upDrive2 = hardwareMap.get(DcMotor.class, "verticalLeft");
-        outDrive = hardwareMap.get(DcMotor.class, "horizontalDrive");
+        upDrive1 = hardwareMap.get(DcMotor.class, "upDrive1");
+        upDrive2 = hardwareMap.get(DcMotor.class, "upDrive2");
+        outDrive = hardwareMap.get(DcMotor.class, "outDrive");
 
         // All 5 input servos
-        clawServo = hardwareMap.get(Servo.class, "intakeClaw"); // Exp. Hub P4
-        clawArmServo = hardwareMap.get(CRServo.class, "intakeWrist"); // Exp. Hub P3
-        clawRotateServo = hardwareMap.get(Servo.class, "intakeRotate"); // Exp. Hub P2
+        clawServo = hardwareMap.get(Servo.class, "clawServo"); // Exp. Hub P4
+        clawArmServo = hardwareMap.get(CRServo.class, "clawArmServo"); // Exp. Hub P3
+        clawRotateServo = hardwareMap.get(Servo.class, "clawRotateServo"); // Exp. Hub P2
         rightIntakeServo = hardwareMap.get(CRServo.class, "rightIntakeServo"); // Exp. Hub P1
         leftIntakeServo = hardwareMap.get(CRServo.class, "leftIntakeServo"); // Exp. Hub P0
 
         // All 3 output servos
-        outtakeClaw = hardwareMap.get(Servo.class, "deposClaw");
+        outtakeClaw = hardwareMap.get(Servo.class, "specimenClaw");
         outtakeClawRotator = hardwareMap.get(Servo.class, "specimenClawRotator");
         outtakeRotator = hardwareMap.get(Servo.class, "outtakeRotator");
 

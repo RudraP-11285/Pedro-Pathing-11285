@@ -29,14 +29,15 @@
 
 package org.firstinspires.ftc.teamcode.teleop;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 
 /*
  * This file contains an example of a Linear "OpMode".
@@ -66,8 +67,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Linear Drive TeleOp Test", group="TeleOp")
-public class linearDriveTest extends LinearOpMode {
+@TeleOp(name="Into the Deep: V2 TeleOp", group="TeleOp")
+public class teleopV2 extends LinearOpMode {
 
     // Declare OpMode members for each of the 4 drive motors and 3 horizontal/vertical lift motors
     private ElapsedTime runtime = new ElapsedTime();
@@ -75,45 +76,35 @@ public class linearDriveTest extends LinearOpMode {
     private DcMotor leftBackDrive = null; // Clarence
     private DcMotor rightFrontDrive = null; // Dumbledore
     private DcMotor rightBackDrive = null; // Gandalf
-    private DcMotor upDrive1 = null; // Aristotle
-    private DcMotor upDrive2 = null; // Plato
-    private DcMotor outDrive = null; // Pythagoras
+    private DcMotor verticalRight = null; // Aristotle
+    private DcMotor verticalLeft = null; // Plato
+    private DcMotor horizontalDrive = null; // Pythagoras
 
     // All 5 of the Intake Servos plugged into Expansion Hub 3
-    private CRServo leftIntakeServo =  null; // Edward
-    private CRServo rightIntakeServo =  null; // Edward
-    private Servo clawServo =  null; // Servo that opens and closes intake claw
-    private Servo clawRotateServo =  null; // Servo that rotates the claw
-    private CRServo clawArmServo =  null; // Servo that rotates the entire claw arm
+    private CRServo intakeArm =  null; // Edward
+    private Servo intakeClaw =  null; // Servo that opens and closes intake claw
+    private Servo intakeRotate =  null; // Servo that rotates the claw left right
+    private CRServo intakeWrist =  null; // Servo that rotates the claw up down
 
     // All 3 of the Outtake Servos plugged into Control Hub
-    private Servo outtakeClaw =  null; // Edward
-    private Servo outtakeClawRotator =  null; // Stuart
-    private Servo outtakeRotator =  null; // Felicia
+    private CRServo deposClaw =  null; // Edward
+    private CRServo deposLeft =  null; // Stuart
+    private CRServo deposRight =  null; // Felicia
 
-    // Variables to toggle each of the servos
-    private Boolean intakeRotateState = false;
-    private Boolean intakeRotateDebounce = false;
+    private AnalogInput depositEncoder1 = null;
+    private AnalogInput depositEncoder2 = null;
 
-    private Boolean clawServoState = false;
-    private Boolean clawServoDebounce = false;
+    private AnalogInput wristEncoder1 = null;
+    private AnalogInput wristEncoder2 = null;
+    private AnalogInput armEncoder1 = null;
+    private AnalogInput armEncoder2 = null;
 
-    private Boolean clawRotateServoState = false;
-    private Boolean clawRotateServoDebounce = false;
+    private DigitalChannel magLimVertical1 = null;
+    private DigitalChannel magLimVertical2 = null;
+    private DigitalChannel magLimHorizontal1 = null;
+    private DigitalChannel magLimHorizontal2 = null;
 
-    private Boolean outtakeRotateState = false;
-    private Boolean outtakeRotateDebounce = false;
-
-    private Boolean outtakeClawState = false;
-    private Boolean outtakeClawDebounce = false;
-
-    private Boolean outtakeClawRotatorState = false;
-    private Boolean outtakeClawRotatorDebounce = false;
-
-    private Boolean horizontalDriveLockState = false;
-    private Boolean horizontalDriveLockDebounce = false;
-
-
+    private DistanceSensor backDistance = null;
 
     @Override
     public void runOpMode() {
@@ -125,21 +116,60 @@ public class linearDriveTest extends LinearOpMode {
         rightFrontDrive = hardwareMap.get(DcMotor.class, "rightFront");
         rightBackDrive = hardwareMap.get(DcMotor.class, "rightBack");
 
-        upDrive1 = hardwareMap.get(DcMotor.class, "verticalRight");
-        upDrive2 = hardwareMap.get(DcMotor.class, "verticalLeft");
-        outDrive = hardwareMap.get(DcMotor.class, "horizontalDrive");
+        // All of the lift thingamajigs
+        verticalRight = hardwareMap.get(DcMotor.class, "verticalRight");
+        verticalLeft = hardwareMap.get(DcMotor.class, "verticalLeft");
+        horizontalDrive = hardwareMap.get(DcMotor.class, "horizontalDrive");
 
-        // All 5 input servos
-        clawServo = hardwareMap.get(Servo.class, "intakeClaw"); // Exp. Hub P4
-        clawArmServo = hardwareMap.get(CRServo.class, "intakeWrist"); // Exp. Hub P3
-        clawRotateServo = hardwareMap.get(Servo.class, "intakeRotate"); // Exp. Hub P2
-        rightIntakeServo = hardwareMap.get(CRServo.class, "rightIntakeServo"); // Exp. Hub P1
-        leftIntakeServo = hardwareMap.get(CRServo.class, "leftIntakeServo"); // Exp. Hub P0
+        // All 4 input servos
+        intakeClaw = hardwareMap.get(Servo.class, "intakeClaw"); // Exp. Hub P4
+        intakeWrist = hardwareMap.get(CRServo.class, "intakeWrist"); // Exp. Hub P3
+        intakeRotate = hardwareMap.get(Servo.class, "intakeRotate"); // Exp. Hub P2
+        intakeArm = hardwareMap.get(CRServo.class, "intakeArm"); // Exp. Hub P1
 
         // All 3 output servos
-        outtakeClaw = hardwareMap.get(Servo.class, "deposClaw");
-        outtakeClawRotator = hardwareMap.get(Servo.class, "specimenClawRotator");
-        outtakeRotator = hardwareMap.get(Servo.class, "outtakeRotator");
+        deposClaw = hardwareMap.get(CRServo.class, "deposClaw");
+        deposLeft = hardwareMap.get(CRServo.class, "deposLeft");
+        deposRight = hardwareMap.get(CRServo.class, "deposRight");
+
+        // All 3 special servo encoders
+        depositEncoder1 = hardwareMap.get(AnalogInput.class, "depositEncoder1");
+        depositEncoder2 = hardwareMap.get(AnalogInput.class, "depositEncoder2");
+        wristEncoder1 = hardwareMap.get(AnalogInput.class, "wristEncoder1");
+        wristEncoder2 = hardwareMap.get(AnalogInput.class, "wristEncoder2");
+        armEncoder1 = hardwareMap.get(AnalogInput.class, "armEncoder1");
+        armEncoder2 = hardwareMap.get(AnalogInput.class, "armEncoder2");
+
+        // All the digital magnetic limit switches
+        magLimVertical1 = hardwareMap.get(DigitalChannel.class, "magLimVertical1");
+        magLimVertical2 = hardwareMap.get(DigitalChannel.class, "magLimVertical2");
+        magLimHorizontal1 = hardwareMap.get(DigitalChannel.class, "magLimHorizontal1");
+        magLimHorizontal2 = hardwareMap.get(DigitalChannel.class, "magLimHorizontal2");
+
+        // The singular distance sensor we have. Yay.
+        backDistance = hardwareMap.get(DistanceSensor.class, "backDistance");
+
+
+
+        ContinuousServoController deposLeftController = new ContinuousServoController(deposLeft, depositEncoder1);
+        ContinuousServoController deposRightController = new ContinuousServoController(deposRight, depositEncoder1);
+        ContinuousServoController wristServoController = new ContinuousServoController(intakeWrist, wristEncoder1);
+        ContinuousServoController intakeArmServoController = new ContinuousServoController(intakeArm, armEncoder1);
+
+
+        // Servo Toggle Debounces
+        Boolean intakeClawState = false; // Claw Open
+        Boolean intakeRotateState = false; // Rotated in State 1
+        Boolean intakeArmState = false; // Rotated in State 1
+        Boolean intakeWristState = false; // Rotated in State 1
+
+        Boolean intakeClawDebounce = false; // Claw Open
+        Boolean intakeRotateDebounce = false; // Rotated in State 1
+        Boolean intakeArmDebounce = false; // Rotated in State 1
+        Boolean intakeWristDebounce = false; // Rotated in State 1
+
+        Boolean horizontalDriveLockDebounce = false;
+        Boolean horizontalDriveLockState = false;
 
 
         // ########################################################################################
@@ -212,93 +242,6 @@ public class linearDriveTest extends LinearOpMode {
             rightBackPower  = gamepad1.b ? 1.0 : 0.0;  // B gamepad
             */
 
-            // Controls for Claw Servo
-            if (gamepad2.right_bumper && (!clawServoDebounce)) {
-                clawServoDebounce = true;
-                if (clawServoState) {
-                    clawServoState = false;
-                    clawServo.setPosition(0);
-                    // Rotate the servos
-                } else {
-                    clawServoState = true;
-                    clawServo.setPosition(1);
-                    // (un)Rotate the servos
-                }
-            }
-            if (!gamepad2.right_bumper && clawServoDebounce) {
-                clawServoDebounce = false;
-            }
-
-
-            // Controls for Claw Rotate Servo
-            if (gamepad2.left_bumper && (!clawRotateServoDebounce)) {
-                clawRotateServoDebounce = true;
-                if (clawRotateServoState) {
-                    clawRotateServoState = false;
-                    clawRotateServo.setPosition(0);
-                    // Rotate the servos
-                } else {
-                    clawRotateServoState = true;
-                    clawRotateServo.setPosition(1);
-                    // (un)Rotate the servos
-                }
-            }
-            if (!gamepad2.left_bumper && clawRotateServoDebounce) {
-                clawRotateServoDebounce = false;
-            }
-
-
-            // Control to Rotate the Output Box itself
-            if (gamepad2.b && (!outtakeRotateDebounce)) {
-                outtakeRotateDebounce = true;
-                if (outtakeRotateState) {
-                    outtakeRotateState = false;
-                    outtakeRotator.setPosition(0.05);
-                } else {
-                    outtakeRotateState = true;
-                    outtakeRotator.setPosition(1);
-                    // (un)Rotate the servo
-                }
-            }
-            if (!gamepad2.b && outtakeRotateDebounce) {
-                outtakeRotateDebounce = false;
-            }
-
-
-            // Control for the Output Claw
-            if (gamepad2.x && (!outtakeClawDebounce)) {
-                outtakeClawDebounce = true;
-                if (outtakeClawState) {
-                    outtakeClawState = false;
-                    outtakeClaw.setPosition(0);
-                } else {
-                    outtakeClawState = true;
-                    outtakeClaw.setPosition(1);
-                    // (un)Rotate the servo
-                }
-            }
-            if (!gamepad2.x && outtakeClawDebounce) {
-                outtakeClawDebounce = false;
-            }
-
-
-            // Control for the Output Claw Rotator
-            if (gamepad2.y && (!outtakeClawRotatorDebounce)) {
-                outtakeClawRotatorDebounce = true;
-                if (outtakeClawRotatorState) {
-                    outtakeClawRotatorState = false;
-                    outtakeClawRotator.setPosition(0);
-                } else {
-                    outtakeClawRotatorState = true;
-                    outtakeClawRotator.setPosition(0.4);
-                    // (un)Rotate the servo
-                }
-            }
-            if (!gamepad2.y && outtakeClawRotatorDebounce) {
-                outtakeClawRotatorDebounce = false;
-            }
-
-
             // LOCK THE OUT DRIVE!
             if (gamepad1.a && (!horizontalDriveLockDebounce)) {
                 horizontalDriveLockDebounce = true;
@@ -313,7 +256,7 @@ public class linearDriveTest extends LinearOpMode {
                 } else {
                     // Unlock the Out Drive
                     horizontalDriveLockState = true;
-                    outDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                    horizontalDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                     // (un)Rotate the servo
                 }
             }
@@ -349,18 +292,18 @@ public class linearDriveTest extends LinearOpMode {
             }
 
 
-            if ((outDrive.getCurrentPosition() < 30) && (!gamepad2.dpad_right) && (!horizontalDriveLockState)) {
-                outDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                outDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                outDrive.setTargetPosition(50);
+            if ((horizontalDrive.getCurrentPosition() < 30) && (!gamepad2.dpad_right) && (!horizontalDriveLockState)) {
+                horizontalDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                horizontalDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                horizontalDrive.setTargetPosition(50);
                 outDrivePower = 0.2;
             } else if (horizontalDriveLockState) {
-                outDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                outDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                outDrive.setTargetPosition(50);
+                horizontalDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                horizontalDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                horizontalDrive.setTargetPosition(50);
                 outDrivePower = 0.2;
             } else {
-                outDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                horizontalDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             }
 
 
@@ -369,18 +312,18 @@ public class linearDriveTest extends LinearOpMode {
             rightFrontDrive.setPower(rightFrontPower * speedMultiplier);
             leftBackDrive.setPower(leftBackPower * speedMultiplier);
             rightBackDrive.setPower(rightBackPower * speedMultiplier);
-            upDrive1.setPower(upDrivePower);
-            upDrive2.setPower(-upDrivePower);
-            outDrive.setPower(outDrivePower);
+            verticalRight.setPower(upDrivePower);
+            verticalLeft.setPower(-upDrivePower);
+            horizontalDrive.setPower(outDrivePower);
 
-            leftIntakeServo.setPower(gamepad2.right_trigger - gamepad2.left_trigger);
-            rightIntakeServo.setPower(gamepad2.left_trigger - gamepad2.right_trigger);
+            if (gamepad2.a) {
+                wristServoController.runToPosition(50, false);
+            } else if (gamepad2.b) {
+                wristServoController.runToPosition(0, true);
+            }
 
-            clawArmServo.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
-
-
-            int upDrivePos1 = upDrive1.getCurrentPosition();
-            int upDrivePos2 = upDrive2.getCurrentPosition();
+            int upDrivePos1 = verticalRight.getCurrentPosition();
+            int upDrivePos2 = verticalLeft.getCurrentPosition();
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
@@ -388,11 +331,8 @@ public class linearDriveTest extends LinearOpMode {
             telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
             telemetry.addData("Lift Encoder Values: ", upDrivePos1 + ", " + upDrivePos2);
 
-            telemetry.addData("Specimen Claw Servo Rotation (t/f): ", outtakeClawRotator.getPosition());
-            telemetry.addData("Output Linear Drive Encoder Value: ", outDrive.getCurrentPosition());
-
-            telemetry.addData("Vertical Lift 1 Encoder Value: ", upDrive1.getCurrentPosition());
-            telemetry.addData("Vertical Lift 2 Encoder Value: ", upDrive2.getCurrentPosition());
+            telemetry.addData("Vertical Lift 1 Encoder Value: ", verticalRight.getCurrentPosition());
+            telemetry.addData("Vertical Lift 2 Encoder Value: ", verticalLeft.getCurrentPosition());
 
             telemetry.update();
         }
