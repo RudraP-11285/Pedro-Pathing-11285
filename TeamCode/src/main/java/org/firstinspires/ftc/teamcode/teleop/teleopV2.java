@@ -317,9 +317,11 @@ public class teleopV2 extends LinearOpMode {
             horizontalDrive.setPower(outDrivePower);
 
             if (gamepad2.a) {
-                wristServoController.runToPosition(50, false);
+                intakeArmServoController.runToPosition(76, false);
             } else if (gamepad2.b) {
-                wristServoController.runToPosition(0, true);
+                intakeArmServoController.runToPosition(52, true);
+            } else {
+                intakeArm.setPower(0);
             }
 
             int upDrivePos1 = verticalRight.getCurrentPosition();
