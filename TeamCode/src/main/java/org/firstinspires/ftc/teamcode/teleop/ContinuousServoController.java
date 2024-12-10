@@ -15,14 +15,15 @@ public class ContinuousServoController {
         this.maxVoltage = encoder.getMaxVoltage(); // Store the encoder's max voltage
     }
 
+
     public void runToPosition(double targetPosition, boolean clockwise) {
         // Normalize the target position to within [0, 360)
         targetPosition = normalizePosition(targetPosition);
 
         // PID coefficients
-        double kP = 0.01; // Proportional gain
-        double kI = 0.001; // Integral gain
-        double kD = 0.001; // Derivative gain
+        double kP = 0.01; // Medium response
+        double kI = 0.001; // Small integral to avoid overshooting
+        double kD = 0.001; // Mild damping
 
         // PID variables
         double integralSum = 0;
@@ -36,11 +37,13 @@ public class ContinuousServoController {
             // Calculate the shortest error to the target position
             double error = calculateError(currentPosition, targetPosition);
 
+            /*
             // Check if the target position is reached within tolerance
             if (Math.abs(error) <= tolerance) {
                 servo.setPower(0); // Stop the servo
                 break;
             }
+             */
 
             // PID calculations
             long currentTime = System.currentTimeMillis();
@@ -61,8 +64,8 @@ public class ContinuousServoController {
             // PID output
             double pidOutput = proportional + integral + derivative;
 
-            // Fine adjustment: If close to the target (within 10 degrees), allow direction change
-            if (Math.abs(error) <= 10) {
+            // Fine adjustment: If close to the target (within 5 degrees), allow direction change
+            if (Math.abs(error) <= 5) {
                 // Scale the output for finer control near the target
                 pidOutput = Math.signum(pidOutput) * Math.min(Math.abs(pidOutput), 0.1); // Limit to 10% power
             } else {
@@ -78,6 +81,44 @@ public class ContinuousServoController {
         }
     }
 
+
+    /*
+    public void runToPosition(double targetPosition, boolean clockwise) {
+        // Normalize the target position to within [0, 360)
+        targetPosition = normalizePosition(targetPosition);
+
+        while (true) {
+            // Get the current position in degrees
+            double currentPosition = getCurrentPositionInDegrees();
+
+            // Calculate the shortest error to the target position
+            double error = calculateError(currentPosition, targetPosition);
+
+            // Check if the target position is reached within tolerance
+            if (Math.abs(error) <= tolerance) {
+                servo.setPower(0); // Stop the servo
+                break;
+            }
+
+            // Fine adjustment: If close to the target (within 10 degrees), allow direction change
+            if (Math.abs(error) <= 5) {
+                // Reverse direction if overshooting
+                if (error > 0) {
+                    servo.setPower(-0.1); // Move counterclockwise
+                } else {
+                    servo.setPower(0.1); // Move clockwise
+                }
+            } else {
+                // Otherwise, move in the specified direction
+                if (clockwise) {
+                    servo.setPower(0.3); // Full speed clockwise
+                } else {
+                    servo.setPower(-0.3); // Full speed counterclockwise
+                }
+            }
+        }
+    }
+     */
 
 
     public double getCurrentPositionInDegrees() {

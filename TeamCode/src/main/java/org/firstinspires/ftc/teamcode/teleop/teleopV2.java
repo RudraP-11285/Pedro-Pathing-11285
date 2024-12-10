@@ -32,6 +32,7 @@ package org.firstinspires.ftc.teamcode.teleop;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -171,6 +172,11 @@ public class teleopV2 extends LinearOpMode {
         Boolean horizontalDriveLockDebounce = false;
         Boolean horizontalDriveLockState = false;
 
+        Boolean intakeState = false;
+        Boolean intakeBoolean = false;
+
+        double targetposition; // temp
+
 
         // ########################################################################################
         // !!!!            IMPORTANT Drive Information. Test your motor directions.            !!!!
@@ -265,6 +271,40 @@ public class teleopV2 extends LinearOpMode {
             }
 
 
+            if (gamepad2.a && (!intakeWristDebounce)) {
+                intakeWristDebounce = true;
+                if (intakeWristState) {
+                    // Rotate the Wrist In
+                    intakeWristState = false;
+                    wristServoController.runToPosition(9.16, false);
+                } else {
+                    // Rotate the Wrist Out
+                    intakeWristState = true;
+                    wristServoController.runToPosition(64.8, true);
+                }
+            }
+            if (!gamepad2.a && intakeWristDebounce) {
+                intakeWristDebounce = false;
+            }
+
+
+            if (gamepad2.b && (!intakeArmDebounce)) {
+                intakeArmDebounce = true;
+                if (intakeArmState) {
+                    // Rotate the Arm In
+                    intakeArmState = false;
+                    intakeArmServoController.runToPosition(76, false);
+                } else {
+                    // Rotate the Arm Out
+                    intakeArmState = true;
+                    intakeArmServoController.runToPosition(50, true);
+                }
+            }
+            if (!gamepad2.b && intakeArmDebounce) {
+                intakeArmDebounce = false;
+            }
+
+
             // Vertical Lift Motor Controls
             if (gamepad2.dpad_up) {
                 upDrivePower = 1;
@@ -316,13 +356,21 @@ public class teleopV2 extends LinearOpMode {
             verticalLeft.setPower(-upDrivePower);
             horizontalDrive.setPower(outDrivePower);
 
+            /*
             if (gamepad2.a) {
                 intakeArmServoController.runToPosition(76, false);
             } else if (gamepad2.b) {
-                intakeArmServoController.runToPosition(52, true);
+                if (intakeArmServoController.getCurrentPositionInDegrees() > 52) {
+                    intakeArmServoController.runToPosition(52, true);
+                } else {
+                    intakeArmServoController.runToPosition(52, false);
+                }
+            } else if (gamepad2.x) {
+                intakeArm.setPower(-0.1);
             } else {
                 intakeArm.setPower(0);
             }
+             */
 
             int upDrivePos1 = verticalRight.getCurrentPosition();
             int upDrivePos2 = verticalLeft.getCurrentPosition();
@@ -335,6 +383,10 @@ public class teleopV2 extends LinearOpMode {
 
             telemetry.addData("Vertical Lift 1 Encoder Value: ", verticalRight.getCurrentPosition());
             telemetry.addData("Vertical Lift 2 Encoder Value: ", verticalLeft.getCurrentPosition());
+
+            telemetry.addData("Wrist Servo Encoder: ", (wristServoController.getCurrentPositionInDegrees()));
+            telemetry.addData("Arm Servo Encoder: ", (intakeArmServoController.getCurrentPositionInDegrees()));
+            telemetry.addData("Depos Servo Encoder: ", (deposLeftController.getCurrentPositionInDegrees()));
 
             telemetry.update();
         }
