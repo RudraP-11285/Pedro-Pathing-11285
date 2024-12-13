@@ -161,8 +161,8 @@ public class teleopV2 extends LinearOpMode {
         // Servo Toggle Debounces
         Boolean intakeClawState = false; // Claw Open
         Boolean intakeRotateState = false; // Rotated in State 1
-        Boolean intakeArmState = false; // Rotated in State 1
-        Boolean intakeWristState = false; // Rotated in State 1
+        Boolean intakeArmState = true; // Rotated in State 1
+        Boolean intakeWristState = true; // Rotated in State 1
 
         Boolean intakeClawDebounce = false; // Claw Open
         Boolean intakeRotateDebounce = false; // Rotated in State 1
@@ -276,15 +276,28 @@ public class teleopV2 extends LinearOpMode {
                 if (intakeWristState) {
                     // Rotate the Wrist In
                     intakeWristState = false;
-                    wristServoController.runToPosition(9.16, false);
+                    //wristServoController.runToPosition(9.16, false);
                 } else {
                     // Rotate the Wrist Out
                     intakeWristState = true;
-                    wristServoController.runToPosition(64.8, true);
+                    //wristServoController.runToPosition(64.8, true);
                 }
             }
             if (!gamepad2.a && intakeWristDebounce) {
                 intakeWristDebounce = false;
+            }
+            if (intakeWristState) {
+                if (wristServoController.getCurrentPositionInDegrees() < 64.8) {
+                    wristServoController.runToPosition(64.8, true);
+                } else {
+                    wristServoController.runToPosition(64.8, false);
+                }
+            } else {
+                if (wristServoController.getCurrentPositionInDegrees() > 9.16) {
+                    wristServoController.runToPosition(9.16, false);
+                } else {
+                    wristServoController.runToPosition(9.16, true);
+                }
             }
 
 
@@ -293,15 +306,28 @@ public class teleopV2 extends LinearOpMode {
                 if (intakeArmState) {
                     // Rotate the Arm In
                     intakeArmState = false;
-                    intakeArmServoController.runToPosition(76, false);
+                    //intakeArmServoController.runToPosition(76, false);
                 } else {
                     // Rotate the Arm Out
                     intakeArmState = true;
-                    intakeArmServoController.runToPosition(50, true);
+                    //intakeArmServoController.runToPosition(50, true);
                 }
             }
             if (!gamepad2.b && intakeArmDebounce) {
                 intakeArmDebounce = false;
+            }
+            if (intakeArmState) {
+                if (intakeArmServoController.getCurrentPositionInDegrees() < 76.5) {
+                    intakeArmServoController.runToPosition(76.5, false);
+                } else {
+                    intakeArmServoController.runToPosition(76.5, true);
+                }
+            } else {
+                if (intakeArmServoController.getCurrentPositionInDegrees() > 52) {
+                    intakeArmServoController.runToPosition(52, true);
+                } else {
+                    intakeArmServoController.runToPosition(52, false);
+                }
             }
 
 
@@ -332,15 +358,15 @@ public class teleopV2 extends LinearOpMode {
             }
 
 
-            if ((horizontalDrive.getCurrentPosition() < 30) && (!gamepad2.dpad_right) && (!horizontalDriveLockState)) {
+            if ((horizontalDrive.getCurrentPosition() < 0) && (!gamepad2.dpad_right) && (!horizontalDriveLockState)) {
                 horizontalDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 horizontalDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                horizontalDrive.setTargetPosition(50);
+                horizontalDrive.setTargetPosition(10);
                 outDrivePower = 0.2;
             } else if (horizontalDriveLockState) {
                 horizontalDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 horizontalDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                horizontalDrive.setTargetPosition(50);
+                horizontalDrive.setTargetPosition(10);
                 outDrivePower = 0.2;
             } else {
                 horizontalDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);

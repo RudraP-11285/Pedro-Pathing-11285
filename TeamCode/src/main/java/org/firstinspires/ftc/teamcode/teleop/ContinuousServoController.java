@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.AnalogInput;
 public class ContinuousServoController {
     private CRServo servo;
     private AnalogInput encoder; // Analog encoder
-    private double tolerance = 0.25; // Position tolerance in degrees (acceptable error)
+    private double tolerance = 0.5; // Position tolerance in degrees (acceptable error)
     private double maxVoltage; // Max voltage of the analog encoder
 
     public ContinuousServoController(CRServo servo, AnalogInput encoder) {
@@ -16,6 +16,7 @@ public class ContinuousServoController {
     }
 
 
+
     public void runToPosition(double targetPosition, boolean clockwise) {
         // Normalize the target position to within [0, 360)
         targetPosition = normalizePosition(targetPosition);
@@ -23,27 +24,26 @@ public class ContinuousServoController {
         // PID coefficients
         double kP = 0.01; // Medium response
         double kI = 0.001; // Small integral to avoid overshooting
-        double kD = 0.001; // Mild damping
+        double kD = 0.01; // Mild damping
 
         // PID variables
         double integralSum = 0;
         double lastError = 0;
         long lastTime = System.currentTimeMillis();
 
-        while (true) {
+        //while (true) {
             // Get the current position in degrees
             double currentPosition = getCurrentPositionInDegrees();
 
             // Calculate the shortest error to the target position
             double error = calculateError(currentPosition, targetPosition);
 
-            /*
+
             // Check if the target position is reached within tolerance
-            if (Math.abs(error) <= tolerance) {
-                servo.setPower(0); // Stop the servo
-                break;
-            }
-             */
+            //if (Math.abs(error) <= tolerance) {
+                //servo.setPower(0); // Stop the servo
+            //} else {
+
 
             // PID calculations
             long currentTime = System.currentTimeMillis();
@@ -67,10 +67,10 @@ public class ContinuousServoController {
             // Fine adjustment: If close to the target (within 5 degrees), allow direction change
             if (Math.abs(error) <= 5) {
                 // Scale the output for finer control near the target
-                pidOutput = Math.signum(pidOutput) * Math.min(Math.abs(pidOutput), 0.1); // Limit to 10% power
+                pidOutput = Math.signum(pidOutput) * Math.min(Math.abs(pidOutput), 0.4); // Limit to 10% power
             } else {
                 // Apply the specified direction if far from the target
-                pidOutput = clockwise ? Math.max(0.3, pidOutput) : Math.min(-0.3, pidOutput);
+                pidOutput = clockwise ? Math.max(0.7, pidOutput) : Math.min(-0.7, pidOutput);
             }
 
             // Clamp the PID output to [-1, 1] for servo power
@@ -78,16 +78,15 @@ public class ContinuousServoController {
 
             // Set servo power
             servo.setPower(pidOutput);
-        }
+        //}
     }
-
 
     /*
     public void runToPosition(double targetPosition, boolean clockwise) {
         // Normalize the target position to within [0, 360)
         targetPosition = normalizePosition(targetPosition);
 
-        while (true) {
+        //while (true) {
             // Get the current position in degrees
             double currentPosition = getCurrentPositionInDegrees();
 
@@ -97,26 +96,26 @@ public class ContinuousServoController {
             // Check if the target position is reached within tolerance
             if (Math.abs(error) <= tolerance) {
                 servo.setPower(0); // Stop the servo
-                break;
-            }
-
-            // Fine adjustment: If close to the target (within 10 degrees), allow direction change
-            if (Math.abs(error) <= 5) {
-                // Reverse direction if overshooting
-                if (error > 0) {
-                    servo.setPower(-0.1); // Move counterclockwise
-                } else {
-                    servo.setPower(0.1); // Move clockwise
-                }
             } else {
-                // Otherwise, move in the specified direction
-                if (clockwise) {
-                    servo.setPower(0.3); // Full speed clockwise
+
+                // Fine adjustment: If close to the target (within 10 degrees), allow direction change
+                if (Math.abs(error) <= 5) {
+                    // Reverse direction if overshooting
+                    if (error > 0) {
+                        servo.setPower(-0.1); // Move counterclockwise
+                    } else {
+                        servo.setPower(0.1); // Move clockwise
+                    }
                 } else {
-                    servo.setPower(-0.3); // Full speed counterclockwise
+                    // Otherwise, move in the specified direction
+                    if (clockwise) {
+                        servo.setPower(0.3); // Full speed clockwise
+                    } else {
+                        servo.setPower(-0.3); // Full speed counterclockwise
+                    }
                 }
             }
-        }
+        //}
     }
      */
 
