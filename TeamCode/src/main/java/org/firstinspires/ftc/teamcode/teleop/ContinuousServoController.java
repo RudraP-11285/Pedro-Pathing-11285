@@ -22,9 +22,9 @@ public class ContinuousServoController {
         targetPosition = normalizePosition(targetPosition);
 
         // PID coefficients
-        double kP = 0.01; // Medium response
+        double kP = 0.025; // Medium response
         double kI = 0.001; // Small integral to avoid overshooting
-        double kD = 0.01; // Mild damping
+        double kD = 0.0025; // Mild damping
 
         // PID variables
         double integralSum = 0;
