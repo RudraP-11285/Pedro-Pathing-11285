@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.AnalogInput;
 public class ContinuousServoController {
     private CRServo servo;
     private AnalogInput encoder; // Analog encoder
-    private double tolerance = 0.5; // Position tolerance in degrees (acceptable error)
+    private double tolerance = 1; // Position tolerance in degrees (acceptable error)
     private double maxVoltage; // Max voltage of the analog encoder
 
     public ContinuousServoController(CRServo servo, AnalogInput encoder) {
@@ -16,7 +16,7 @@ public class ContinuousServoController {
     }
 
 
-
+    /*
     public void runToPosition(double targetPosition, boolean clockwise) {
         // Normalize the target position to within [0, 360)
         targetPosition = normalizePosition(targetPosition);
@@ -80,8 +80,9 @@ public class ContinuousServoController {
             servo.setPower(pidOutput);
         //}
     }
+     */
 
-    /*
+
     public void runToPosition(double targetPosition, boolean clockwise) {
         // Normalize the target position to within [0, 360)
         targetPosition = normalizePosition(targetPosition);
@@ -102,22 +103,21 @@ public class ContinuousServoController {
                 if (Math.abs(error) <= 5) {
                     // Reverse direction if overshooting
                     if (error > 0) {
-                        servo.setPower(-0.1); // Move counterclockwise
+                        servo.setPower(-0.15); // Move counterclockwise
                     } else {
-                        servo.setPower(0.1); // Move clockwise
+                        servo.setPower(0.15); // Move clockwise
                     }
                 } else {
                     // Otherwise, move in the specified direction
                     if (clockwise) {
-                        servo.setPower(0.3); // Full speed clockwise
+                        servo.setPower(0.4); // Full speed clockwise
                     } else {
-                        servo.setPower(-0.3); // Full speed counterclockwise
+                        servo.setPower(-0.4); // Full speed counterclockwise
                     }
                 }
             }
         //}
     }
-     */
 
 
     public double getCurrentPositionInDegrees() {

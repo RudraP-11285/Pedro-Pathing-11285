@@ -270,6 +270,38 @@ public class teleopV2 extends LinearOpMode {
                 horizontalDriveLockDebounce = false;
             }
 
+/*
+            if (gamepad2.a && (!intakeWristDebounce)) {
+                intakeWristDebounce = true;
+                if (intakeWristState) {
+                    // Rotate the Wrist In
+                    intakeWristState = false;
+                    //wristServoController.runToPosition(9.16, false);
+                } else {
+                    // Rotate the Wrist Out
+                    intakeWristState = true;
+                    //wristServoController.runToPosition(64.8, true);
+                }
+            }
+            if (!gamepad2.a && intakeWristDebounce) {
+                intakeWristDebounce = false;
+            }
+            if (intakeWristState) {
+                if (wristServoController.getCurrentPositionInDegrees() < 60) {
+                    wristServoController.runToPosition(60, true);
+                } else {
+                    wristServoController.runToPosition(60, false);
+                }
+            } else {
+                if (wristServoController.getCurrentPositionInDegrees() > 9.16) {
+                    wristServoController.runToPosition(9.16, false);
+                } else {
+                    wristServoController.runToPosition(9.16, true);
+                }
+            }
+
+ */
+
 
             if (gamepad2.a && (!intakeWristDebounce)) {
                 intakeWristDebounce = true;
@@ -287,10 +319,10 @@ public class teleopV2 extends LinearOpMode {
                 intakeWristDebounce = false;
             }
             if (intakeWristState) {
-                if (wristServoController.getCurrentPositionInDegrees() < 64.8) {
-                    wristServoController.runToPosition(64.8, true);
+                if (wristServoController.getCurrentPositionInDegrees() < 60) {
+                    wristServoController.runToPosition(60, true);
                 } else {
-                    wristServoController.runToPosition(64.8, false);
+                    wristServoController.runToPosition(60, false);
                 }
             } else {
                 if (wristServoController.getCurrentPositionInDegrees() > 9.16) {
@@ -317,10 +349,10 @@ public class teleopV2 extends LinearOpMode {
                 intakeArmDebounce = false;
             }
             if (intakeArmState) {
-                if (intakeArmServoController.getCurrentPositionInDegrees() < 76.5) {
-                    intakeArmServoController.runToPosition(76.5, false);
+                if (intakeArmServoController.getCurrentPositionInDegrees() < 77.25) {
+                    intakeArmServoController.runToPosition(77.25, false);
                 } else {
-                    intakeArmServoController.runToPosition(76.5, true);
+                    intakeArmServoController.runToPosition(77.25, true);
                 }
             } else {
                 if (intakeArmServoController.getCurrentPositionInDegrees() > 52) {

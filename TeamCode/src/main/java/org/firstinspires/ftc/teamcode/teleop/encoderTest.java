@@ -21,9 +21,9 @@ public class encoderTest extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        intakeArm = hardwareMap.get(CRServo.class, "intakeArm"); // Exp. Hub P3
-        signalA = hardwareMap.get(AnalogInput.class, "armEncoder1");
-        signalB = hardwareMap.get(AnalogInput.class, "armEncoder2");
+        intakeArm = hardwareMap.get(CRServo.class, "intakeWrist"); // Exp. Hub P3
+        signalA = hardwareMap.get(AnalogInput.class, "wristEncoder1");
+        signalB = hardwareMap.get(AnalogInput.class, "wristEncoder2");
         limitSwitch = hardwareMap.get(DigitalChannel.class, "magLimVertical1"); // 'magLimVert1' is the name in the config file
         waitForStart();
 
