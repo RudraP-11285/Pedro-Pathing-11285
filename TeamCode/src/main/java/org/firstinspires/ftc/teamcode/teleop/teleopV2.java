@@ -88,7 +88,7 @@ public class teleopV2 extends LinearOpMode {
     private CRServo intakeWrist =  null; // Servo that rotates the claw up down
 
     // All 3 of the Outtake Servos plugged into Control Hub
-    private CRServo deposClaw =  null; // Edward
+    private Servo deposClaw =  null; // Edward
     private CRServo deposLeft =  null; // Stuart
     private CRServo deposRight =  null; // Felicia
 
@@ -129,7 +129,7 @@ public class teleopV2 extends LinearOpMode {
         intakeArm = hardwareMap.get(CRServo.class, "intakeArm"); // Exp. Hub P1
 
         // All 3 output servos
-        deposClaw = hardwareMap.get(CRServo.class, "deposClaw");
+        deposClaw = hardwareMap.get(Servo.class, "deposClaw");
         deposLeft = hardwareMap.get(CRServo.class, "deposLeft");
         deposRight = hardwareMap.get(CRServo.class, "deposRight");
 
@@ -163,11 +163,15 @@ public class teleopV2 extends LinearOpMode {
         Boolean intakeRotateState = false; // Rotated in State 1
         Boolean intakeArmState = true; // Rotated in State 1
         Boolean intakeWristState = true; // Rotated in State 1
+        Boolean deposClawState = true;
+        Boolean deposArmState = true;
 
         Boolean intakeClawDebounce = false; // Claw Open
         Boolean intakeRotateDebounce = false; // Rotated in State 1
         Boolean intakeArmDebounce = false; // Rotated in State 1
         Boolean intakeWristDebounce = false; // Rotated in State 1
+        Boolean deposClawDebounce = false;
+        Boolean deposArmDebounce = false;
 
         Boolean horizontalDriveLockDebounce = false;
         Boolean horizontalDriveLockState = false;
@@ -270,7 +274,67 @@ public class teleopV2 extends LinearOpMode {
                 horizontalDriveLockDebounce = false;
             }
 
-/*
+
+            if (gamepad2.x && (!intakeClawDebounce)) {
+                intakeClawDebounce = true;
+                if (intakeClawState) {
+                    intakeClawState = false;
+                    intakeClaw.setPosition(0);
+                } else {
+                    intakeClawState = true;
+                    intakeClaw.setPosition(1);
+                }
+            }
+            if (!gamepad2.x && intakeClawDebounce) {
+                intakeClawDebounce = false;
+            }
+
+
+            if (gamepad2.y && (!deposClawDebounce)) {
+                deposClawDebounce = true;
+                if (deposClawState) {
+                    deposClawState = false;
+                    deposClaw.setPosition(0.3);
+                } else {
+                    deposClawState = true;
+                    deposClaw.setPosition(0.75);
+                }
+            }
+            if (!gamepad2.y && deposClawDebounce) {
+                deposClawDebounce = false;
+            }
+
+
+
+            if (gamepad2.left_bumper && (!deposArmDebounce)) {
+                deposArmDebounce = true;
+                if (deposArmState) {
+                    // Rotate the Wrist In
+                    deposArmState = false;
+                    //wristServoController.runToPosition(9.16, false);
+                } else {
+                    // Rotate the Wrist Out
+                    deposArmState = true;
+                    //wristServoController.runToPosition(64.8, true);
+                }
+            }
+            if (!gamepad2.left_bumper && deposArmDebounce) {
+                deposArmDebounce = false;
+            }
+            if (deposArmState) {
+                if (deposLeftController.getCurrentPositionInDegrees() < 81 && deposLeftController.getCurrentPositionInDegrees() > 30) {
+                    deposLeftController.runToPosition(81, false, 5);
+                } else {
+                    deposLeftController.runToPosition(81, true, 5);
+                }
+                //deposRightController.runToPosition(81, false, 1);
+            } else {
+                //deposRightController.runToPosition(14, true, 1);
+                deposLeftController.runToPosition(14, false, 1);
+            }
+
+
+
             if (gamepad2.a && (!intakeWristDebounce)) {
                 intakeWristDebounce = true;
                 if (intakeWristState) {
@@ -288,47 +352,15 @@ public class teleopV2 extends LinearOpMode {
             }
             if (intakeWristState) {
                 if (wristServoController.getCurrentPositionInDegrees() < 60) {
-                    wristServoController.runToPosition(60, true);
+                    wristServoController.runToPosition(60, true, 2.5);
                 } else {
-                    wristServoController.runToPosition(60, false);
+                    wristServoController.runToPosition(60, false, 2.5);
                 }
             } else {
                 if (wristServoController.getCurrentPositionInDegrees() > 9.16) {
-                    wristServoController.runToPosition(9.16, false);
+                    wristServoController.runToPosition(9.16, false, 1);
                 } else {
-                    wristServoController.runToPosition(9.16, true);
-                }
-            }
-
- */
-
-
-            if (gamepad2.a && (!intakeWristDebounce)) {
-                intakeWristDebounce = true;
-                if (intakeWristState) {
-                    // Rotate the Wrist In
-                    intakeWristState = false;
-                    //wristServoController.runToPosition(9.16, false);
-                } else {
-                    // Rotate the Wrist Out
-                    intakeWristState = true;
-                    //wristServoController.runToPosition(64.8, true);
-                }
-            }
-            if (!gamepad2.a && intakeWristDebounce) {
-                intakeWristDebounce = false;
-            }
-            if (intakeWristState) {
-                if (wristServoController.getCurrentPositionInDegrees() < 60) {
-                    wristServoController.runToPosition(60, true);
-                } else {
-                    wristServoController.runToPosition(60, false);
-                }
-            } else {
-                if (wristServoController.getCurrentPositionInDegrees() > 9.16) {
-                    wristServoController.runToPosition(9.16, false);
-                } else {
-                    wristServoController.runToPosition(9.16, true);
+                    wristServoController.runToPosition(9.16, true, 1);
                 }
             }
 
@@ -349,16 +381,16 @@ public class teleopV2 extends LinearOpMode {
                 intakeArmDebounce = false;
             }
             if (intakeArmState) {
-                if (intakeArmServoController.getCurrentPositionInDegrees() < 77.25) {
-                    intakeArmServoController.runToPosition(77.25, false);
+                if (intakeArmServoController.getCurrentPositionInDegrees() < 77.7) {
+                    intakeArmServoController.runToPosition(77.7, false, 1);
                 } else {
-                    intakeArmServoController.runToPosition(77.25, true);
+                    intakeArmServoController.runToPosition(77.7, true, 1);
                 }
             } else {
-                if (intakeArmServoController.getCurrentPositionInDegrees() > 52) {
-                    intakeArmServoController.runToPosition(52, true);
+                if (intakeArmServoController.getCurrentPositionInDegrees() > 51.5) {
+                    intakeArmServoController.runToPosition(51.5, true, 1);
                 } else {
-                    intakeArmServoController.runToPosition(52, false);
+                    intakeArmServoController.runToPosition(51.5, false, 1);
                 }
             }
 
@@ -390,15 +422,15 @@ public class teleopV2 extends LinearOpMode {
             }
 
 
-            if ((horizontalDrive.getCurrentPosition() < 0) && (!gamepad2.dpad_right) && (!horizontalDriveLockState)) {
+            if ((horizontalDrive.getCurrentPosition() < -10) && (!gamepad2.dpad_right) && (!horizontalDriveLockState)) {
                 horizontalDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 horizontalDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                horizontalDrive.setTargetPosition(10);
+                horizontalDrive.setTargetPosition(0);
                 outDrivePower = 0.2;
             } else if (horizontalDriveLockState) {
                 horizontalDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 horizontalDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                horizontalDrive.setTargetPosition(10);
+                horizontalDrive.setTargetPosition(0);
                 outDrivePower = 0.2;
             } else {
                 horizontalDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -414,22 +446,6 @@ public class teleopV2 extends LinearOpMode {
             verticalLeft.setPower(-upDrivePower);
             horizontalDrive.setPower(outDrivePower);
 
-            /*
-            if (gamepad2.a) {
-                intakeArmServoController.runToPosition(76, false);
-            } else if (gamepad2.b) {
-                if (intakeArmServoController.getCurrentPositionInDegrees() > 52) {
-                    intakeArmServoController.runToPosition(52, true);
-                } else {
-                    intakeArmServoController.runToPosition(52, false);
-                }
-            } else if (gamepad2.x) {
-                intakeArm.setPower(-0.1);
-            } else {
-                intakeArm.setPower(0);
-            }
-             */
-
             int upDrivePos1 = verticalRight.getCurrentPosition();
             int upDrivePos2 = verticalLeft.getCurrentPosition();
 
@@ -439,8 +455,9 @@ public class teleopV2 extends LinearOpMode {
             telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
             telemetry.addData("Lift Encoder Values: ", upDrivePos1 + ", " + upDrivePos2);
 
-            telemetry.addData("Vertical Lift 1 Encoder Value: ", verticalRight.getCurrentPosition());
-            telemetry.addData("Vertical Lift 2 Encoder Value: ", verticalLeft.getCurrentPosition());
+            telemetry.addData("Claw Debounce: ", deposClawDebounce);
+            telemetry.addData("Claw State: ", deposClawState);
+            telemetry.addData("Depos Claw Position: ", deposClaw.getPosition());
 
             telemetry.addData("Wrist Servo Encoder: ", (wristServoController.getCurrentPositionInDegrees()));
             telemetry.addData("Arm Servo Encoder: ", (intakeArmServoController.getCurrentPositionInDegrees()));
