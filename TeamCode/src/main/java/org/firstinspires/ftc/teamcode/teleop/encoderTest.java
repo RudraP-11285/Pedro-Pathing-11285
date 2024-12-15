@@ -21,9 +21,9 @@ public class encoderTest extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        intakeArm = hardwareMap.get(CRServo.class, "intakeWrist"); // Exp. Hub P3
-        signalA = hardwareMap.get(AnalogInput.class, "wristEncoder1");
-        signalB = hardwareMap.get(AnalogInput.class, "wristEncoder2");
+        intakeArm = hardwareMap.get(CRServo.class, "deposLeft"); // Exp. Hub P3
+        signalA = hardwareMap.get(AnalogInput.class, "depositEncoder1");
+        signalB = hardwareMap.get(AnalogInput.class, "depositEncoder2");
         limitSwitch = hardwareMap.get(DigitalChannel.class, "magLimVertical1"); // 'magLimVert1' is the name in the config file
         waitForStart();
 
@@ -37,7 +37,7 @@ public class encoderTest extends LinearOpMode {
                 telemetry.addData("Limit Switch", "Not Triggered");
             }
 
-            telemetry.addData("Arm Encoder in Degrees", controller.getCurrentPositionInDegrees());
+            telemetry.addData("Depos Arm Encoder in Degrees", controller.getCurrentPositionInDegrees());
 
             telemetry.update();
         }

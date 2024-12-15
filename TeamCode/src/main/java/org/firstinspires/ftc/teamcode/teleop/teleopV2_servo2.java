@@ -31,14 +31,13 @@ package org.firstinspires.ftc.teamcode.teleop;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 /*
  * This file contains an example of a Linear "OpMode".
@@ -68,8 +67,8 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Into the Deep: V2 TeleOp", group="TeleOp")
-public class teleopV2 extends LinearOpMode {
+@TeleOp(name="Into the Deep: V2 TeleOp NEW^2", group="TeleOp")
+public class teleopV2_servo2 extends LinearOpMode {
 
     // Declare OpMode members for each of the 4 drive motors and 3 horizontal/vertical lift motors
     private ElapsedTime runtime = new ElapsedTime();
@@ -107,6 +106,54 @@ public class teleopV2 extends LinearOpMode {
 
     private DistanceSensor backDistance = null;
 
+    public enum IntakeClawState {
+        OPEN(1.0),
+        INPROGRESS(0.0),
+        CLOSE(0.0);
+        private double state;
+        IntakeClawState(double state) {
+            this.state = state;
+        }
+        public double getState() {
+            return state;
+        }
+    }
+
+    public enum DeposClawState {
+        OPEN(0.8),
+        INPROGRESS(0.0),
+        CLOSE(0.3);
+        private double state;
+        DeposClawState(double state) {
+            this.state = state;
+        }
+        public double getState() {
+            return state;
+        }
+    }
+    DeposClawState deposClawState = DeposClawState.OPEN;
+    IntakeClawState intakeClawState = IntakeClawState.OPEN;
+    public enum ClawRotateState {
+        VERITCAL(1.0),
+        INPROGRESS(0.0),
+        HORIZONTAL(0.0);
+        private double state;
+        ClawRotateState(double state) {
+            this.state = state;
+        }
+        public double getState() {
+            return state;
+        }
+    }
+    /*
+    public enum deposArmState {
+        INPROGRESS(0)
+        UPC(92)
+        UPCC(92)
+        DOWN(14)
+    }
+    */
+    ClawRotateState clawRotateState = ClawRotateState.HORIZONTAL;
     @Override
     public void runOpMode() {
 
@@ -158,13 +205,14 @@ public class teleopV2 extends LinearOpMode {
         ContinuousServoController intakeArmServoController = new ContinuousServoController(intakeArm, armEncoder1);
 
 
+
         // Servo Toggle Debounces
-        Boolean intakeClawState = false; // Claw Open
-        Boolean intakeRotateState = false; // Rotated in State 1
-        Boolean intakeArmState = true; // Rotated in State 1
-        Boolean intakeWristState = true; // Rotated in State 1
-        Boolean deposClawState = true;
-        Boolean deposArmState = false;
+//        Boolean intakeClawState = false; // Claw Open
+//        Boolean intakeRotateState = false; // Rotated in State 1
+//        Boolean intakeArmState = true; // Rotated in State 1
+//        Boolean intakeWristState = true; // Rotated in State 1
+//        Boolean deposClawState = true;
+//        Boolean deposArmState = true;
 
         Boolean intakeClawDebounce = false; // Claw Open
         Boolean intakeRotateDebounce = false; // Rotated in State 1
@@ -197,8 +245,6 @@ public class teleopV2 extends LinearOpMode {
         rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
         rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
 
-        verticalLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
         telemetry.update();
@@ -224,8 +270,6 @@ public class teleopV2 extends LinearOpMode {
             double rightBackPower  = axial + lateral - yaw;
             double upDrivePower    = 0;
             double outDrivePower   = 0;
-
-            boolean limitSwitchNotTriggered = magLimVertical1.getState();
 
             // Normalize the values so no wheel power exceeds 100%
             // This ensures that the robot maintains the desired motion.
@@ -278,7 +322,7 @@ public class teleopV2 extends LinearOpMode {
                 horizontalDriveLockDebounce = false;
             }
 
-
+/*
             if (gamepad2.x && (!intakeClawDebounce)) {
                 intakeClawDebounce = true;
                 if (intakeClawState) {
@@ -341,7 +385,7 @@ public class teleopV2 extends LinearOpMode {
             if (!gamepad2.left_bumper && deposArmDebounce) {
                 deposArmDebounce = false;
             }
-            if (deposArmState) { // 92 drop limit, 80 (73) specimen limit
+            if (deposArmState) {
                 if (deposLeftController.getCurrentPositionInDegrees() < 92 && deposLeftController.getCurrentPositionInDegrees() > 30) {
                     deposLeftController.runToPosition(92, false, 10);
                 } else {
@@ -360,12 +404,10 @@ public class teleopV2 extends LinearOpMode {
                 intakeWristDebounce = true;
                 if (intakeWristState) {
                     // Rotate the Wrist In
-                    //intakeArmState = false;
                     intakeWristState = false;
                     //wristServoController.runToPosition(9.16, false);
                 } else {
                     // Rotate the Wrist Out
-                    //intakeArmState = true;
                     intakeWristState = true;
                     //wristServoController.runToPosition(64.8, true);
                 }
@@ -374,10 +416,10 @@ public class teleopV2 extends LinearOpMode {
                 intakeWristDebounce = false;
             }
             if (intakeWristState) {
-                if (wristServoController.getCurrentPositionInDegrees() < 59) {
-                    wristServoController.runToPosition(59, true, 2.5);
+                if (wristServoController.getCurrentPositionInDegrees() < 58) {
+                    wristServoController.runToPosition(58, true, 2.5);
                 } else {
-                    wristServoController.runToPosition(59, false, 2.5);
+                    wristServoController.runToPosition(58, false, 2.5);
                 }
             } else {
                 if (wristServoController.getCurrentPositionInDegrees() > 9.16) {
@@ -416,6 +458,52 @@ public class teleopV2 extends LinearOpMode {
                     intakeArmServoController.runToPosition(51.5, false, 1);
                 }
             }
+*/
+            //NEW CONDITIONALS
+            if (gamepad2.x) {
+                switch (intakeClawState) {
+                    case OPEN:
+                        intakeClawState = IntakeClawState.INPROGRESS;
+                        intakeClaw.setPosition(IntakeClawState.OPEN.getState());
+                        intakeClawState = IntakeClawState.CLOSE;
+                        break;
+                    case CLOSE:
+                        intakeClawState = IntakeClawState.INPROGRESS;
+                        intakeClaw.setPosition(IntakeClawState.CLOSE.getState());
+                        intakeClawState = IntakeClawState.OPEN;
+                        break;
+                }
+            }
+            if (gamepad2.right_bumper) {
+                switch (clawRotateState) {
+                    case HORIZONTAL:
+                        clawRotateState = ClawRotateState.INPROGRESS;
+                        intakeRotate.setPosition(ClawRotateState.HORIZONTAL.getState());
+                        clawRotateState = ClawRotateState.VERITCAL;
+                        break;
+                    case VERITCAL:
+                        clawRotateState = ClawRotateState.INPROGRESS;
+                        intakeRotate.setPosition(ClawRotateState.VERITCAL.getState());
+                        clawRotateState = ClawRotateState.HORIZONTAL;
+                        break;
+                }
+            }
+            if (gamepad2.y) {
+                switch (deposClawState) {
+                    case OPEN:
+                        deposClawState = DeposClawState.INPROGRESS;
+                        deposClaw.setPosition(IntakeClawState.OPEN.getState());
+                        deposClawState = DeposClawState.CLOSE;
+                        break;
+                    case CLOSE:
+                        deposClawState = DeposClawState.INPROGRESS;
+                        deposClaw.setPosition(DeposClawState.CLOSE.getState());
+                        deposClawState = DeposClawState.OPEN;
+                        break;
+                }
+            }
+
+
 
 
             // Vertical Lift Motor Controls
@@ -479,7 +567,7 @@ public class teleopV2 extends LinearOpMode {
             telemetry.addData("Lift Encoder Values: ", upDrivePos1 + ", " + upDrivePos2);
 
             telemetry.addData("Claw Debounce: ", intakeRotateDebounce);
-            telemetry.addData("Claw State: ", intakeRotateState);
+            //telemetry.addData("Claw State: ", intakeRotateState);
             //telemetry.addData("Depos Claw Position: ", intakeRotate.getPosition());
 
             telemetry.addData("Wrist Servo Encoder: ", (wristServoController.getCurrentPositionInDegrees()));

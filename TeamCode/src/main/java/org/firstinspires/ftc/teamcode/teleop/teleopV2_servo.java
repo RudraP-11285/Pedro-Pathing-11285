@@ -68,8 +68,8 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Into the Deep: V2 TeleOp", group="TeleOp")
-public class teleopV2 extends LinearOpMode {
+@TeleOp(name="Into the Deep: V2 TeleOp NEW", group="TeleOp")
+public class teleopV2_servo extends LinearOpMode {
 
     // Declare OpMode members for each of the 4 drive motors and 3 horizontal/vertical lift motors
     private ElapsedTime runtime = new ElapsedTime();
@@ -164,7 +164,7 @@ public class teleopV2 extends LinearOpMode {
         Boolean intakeArmState = true; // Rotated in State 1
         Boolean intakeWristState = true; // Rotated in State 1
         Boolean deposClawState = true;
-        Boolean deposArmState = false;
+        Boolean deposArmState = true;
 
         Boolean intakeClawDebounce = false; // Claw Open
         Boolean intakeRotateDebounce = false; // Rotated in State 1
@@ -197,8 +197,6 @@ public class teleopV2 extends LinearOpMode {
         rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
         rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
 
-        verticalLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
         telemetry.update();
@@ -224,8 +222,6 @@ public class teleopV2 extends LinearOpMode {
             double rightBackPower  = axial + lateral - yaw;
             double upDrivePower    = 0;
             double outDrivePower   = 0;
-
-            boolean limitSwitchNotTriggered = magLimVertical1.getState();
 
             // Normalize the values so no wheel power exceeds 100%
             // This ensures that the robot maintains the desired motion.
@@ -341,7 +337,7 @@ public class teleopV2 extends LinearOpMode {
             if (!gamepad2.left_bumper && deposArmDebounce) {
                 deposArmDebounce = false;
             }
-            if (deposArmState) { // 92 drop limit, 80 (73) specimen limit
+            if (deposArmState) {
                 if (deposLeftController.getCurrentPositionInDegrees() < 92 && deposLeftController.getCurrentPositionInDegrees() > 30) {
                     deposLeftController.runToPosition(92, false, 10);
                 } else {
@@ -360,12 +356,10 @@ public class teleopV2 extends LinearOpMode {
                 intakeWristDebounce = true;
                 if (intakeWristState) {
                     // Rotate the Wrist In
-                    //intakeArmState = false;
                     intakeWristState = false;
                     //wristServoController.runToPosition(9.16, false);
                 } else {
                     // Rotate the Wrist Out
-                    //intakeArmState = true;
                     intakeWristState = true;
                     //wristServoController.runToPosition(64.8, true);
                 }
@@ -374,10 +368,10 @@ public class teleopV2 extends LinearOpMode {
                 intakeWristDebounce = false;
             }
             if (intakeWristState) {
-                if (wristServoController.getCurrentPositionInDegrees() < 59) {
-                    wristServoController.runToPosition(59, true, 2.5);
+                if (wristServoController.getCurrentPositionInDegrees() < 58) {
+                    wristServoController.runToPosition(58, true, 2.5);
                 } else {
-                    wristServoController.runToPosition(59, false, 2.5);
+                    wristServoController.runToPosition(58, false, 2.5);
                 }
             } else {
                 if (wristServoController.getCurrentPositionInDegrees() > 9.16) {
