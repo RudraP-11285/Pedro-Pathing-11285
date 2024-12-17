@@ -70,7 +70,7 @@ public class PoseUpdater {
      */
     public PoseUpdater(HardwareMap hardwareMap) {
         // TODO: replace the second argument with your preferred localizer
-        this(hardwareMap, new ThreeWheelIMULocalizer(hardwareMap)); // Note that I added the IMU Localizer on this line - Rudra
+        this(hardwareMap, new ThreeWheelLocalizer(hardwareMap));
     }
 
     /**
