@@ -145,6 +145,65 @@ public class teleopV2_servo2 extends LinearOpMode {
             return state;
         }
     }
+    public enum DeposArmState {
+        UPC(92,true),
+        UPCC(92,false),
+        DOWNCC(14,false),
+        INPROGRESS(0,true);
+        private double pos;
+        private boolean clockwise;
+        DeposArmState(double pos, boolean clockwise) {
+            this.pos = pos;
+            this.clockwise = clockwise;
+        }
+        public double getPos() {
+            return pos;
+        }
+        public boolean isClockwise() {
+            return clockwise;
+        }
+    }
+    public enum IntakeWristState {
+        UPC(58,true),
+        UPCC(58,false),
+        DOWNC(9.16,true),
+        DOWNCC(9.16,true),
+        INPROGRESS(0,true);
+        private double pos;
+        private boolean clockwise;
+        IntakeWristState(double pos, boolean clockwise) {
+            this.pos = pos;
+            this.clockwise = clockwise;
+        }
+        public double getPos() {
+            return pos;
+        }
+        public boolean isClockwise() {
+            return clockwise;
+        }
+    }
+    IntakeWristState intakeWristState = IntakeWristState.DOWNC;
+    DeposArmState deposArmState = DeposArmState.DOWNCC;
+    public enum IntakeArmState {
+        UPC(77.7,true),
+        UPCC(77.7,false),
+        DOWNC(51.5,true),
+        DOWNCC(51.5,false),
+        INPROGRESS(0,true);
+        private double pos;
+        private boolean clockwise;
+        IntakeArmState(double pos, boolean clockwise) {
+            this.pos = pos;
+            this.clockwise = clockwise;
+        }
+        public double getPos() {
+            return pos;
+        }
+        public boolean isClockwise() {
+            return clockwise;
+        }
+    }
+    IntakeArmState intakeArmState = IntakeArmState.UPC;
     /*
     public enum deposArmState {
         INPROGRESS(0)
@@ -214,18 +273,18 @@ public class teleopV2_servo2 extends LinearOpMode {
 //        Boolean deposClawState = true;
 //        Boolean deposArmState = true;
 
-        Boolean intakeClawDebounce = false; // Claw Open
-        Boolean intakeRotateDebounce = false; // Rotated in State 1
-        Boolean intakeArmDebounce = false; // Rotated in State 1
-        Boolean intakeWristDebounce = false; // Rotated in State 1
-        Boolean deposClawDebounce = false;
-        Boolean deposArmDebounce = false;
+        boolean intakeClawDebounce = false; // Claw Open
+        boolean intakeRotateDebounce = false; // Rotated in State 1
+        boolean intakeArmDebounce = false; // Rotated in State 1
+        boolean intakeWristDebounce = false; // Rotated in State 1
+        boolean deposClawDebounce = false;
+        boolean deposArmDebounce = false;
 
-        Boolean horizontalDriveLockDebounce = false;
-        Boolean horizontalDriveLockState = false;
+        boolean horizontalDriveLockDebounce = false;
+        boolean horizontalDriveLockState = false;
 
-        Boolean intakeState = false;
-        Boolean intakeBoolean = false;
+        boolean intakeState = false;
+        boolean intakeBoolean = false;
 
         double targetposition; // temp
 
@@ -502,6 +561,73 @@ public class teleopV2_servo2 extends LinearOpMode {
                         break;
                 }
             }
+            if (gamepad2.left_bumper) {
+                switch (deposArmState) {
+                    case UPC:
+                    case UPCC:
+                        deposArmState = DeposArmState.INPROGRESS;
+                        deposLeftController.runToPosition(DeposArmState.DOWNCC.getPos(),DeposArmState.DOWNCC.isClockwise(),1);
+                        deposArmState = DeposArmState.DOWNCC;
+                    case DOWNCC:
+                        deposArmState = DeposArmState.INPROGRESS;
+                        if (deposLeftController.getCurrentPositionInDegrees() < 92 && deposLeftController.getCurrentPositionInDegrees() > 30) {
+                            deposLeftController.runToPosition(DeposArmState.UPCC.getPos(),DeposArmState.UPCC.isClockwise(), 10);
+                            deposArmState = DeposArmState.UPCC;
+                        } else {
+                            deposLeftController.runToPosition(DeposArmState.UPC.getPos(),DeposArmState.UPC.isClockwise(),10);
+                            deposArmState = DeposArmState.UPC;
+                        }
+                }
+            }
+            if (gamepad2.a) {
+                switch (intakeWristState) {
+                    case UPC:
+                    case UPCC:
+                        intakeWristState = IntakeWristState.INPROGRESS;
+                        if (wristServoController.getCurrentPositionInDegrees() > 9.16) {
+                            wristServoController.runToPosition(IntakeWristState.DOWNCC.getPos(),IntakeWristState.DOWNCC.isClockwise(),1);
+                            intakeWristState = IntakeWristState.DOWNCC;
+                        } else {
+                            wristServoController.runToPosition(IntakeWristState.DOWNC.getPos(),IntakeWristState.DOWNC.isClockwise(),1);
+                            intakeWristState = IntakeWristState.DOWNC;
+                        }
+                    case DOWNC:
+                    case DOWNCC:
+                        intakeWristState = IntakeWristState.INPROGRESS;
+                        if (wristServoController.getCurrentPositionInDegrees() < 58) {
+                            wristServoController.runToPosition(IntakeWristState.UPC.getPos(), IntakeWristState.UPC.isClockwise(), 2.5);
+                            intakeWristState = IntakeWristState.UPC;
+                        } else {
+                            wristServoController.runToPosition(IntakeWristState.UPCC.getPos(), IntakeWristState.UPCC.isClockwise(), 2.5);
+                            intakeWristState = IntakeWristState.UPCC;
+                        }
+                }
+            }
+            if (gamepad2.b) {
+                switch (intakeArmState) {
+                    case UPC:
+                    case UPCC:
+                        intakeArmState = IntakeArmState.INPROGRESS;
+                        if (intakeArmServoController.getCurrentPositionInDegrees() > 51.5) {
+                            intakeArmServoController.runToPosition(IntakeArmState.DOWNC.getPos(),IntakeArmState.DOWNC.isClockwise(), 1);
+                            intakeArmState = IntakeArmState.DOWNC;
+                        } else {
+                            intakeArmServoController.runToPosition(IntakeArmState.DOWNCC.getPos(),IntakeArmState.DOWNCC.isClockwise(), 1);
+                            intakeArmState = IntakeArmState.DOWNCC;
+                        }
+                    case DOWNC:
+                    case DOWNCC:
+                        intakeArmState = IntakeArmState.INPROGRESS;
+                        if (intakeArmServoController.getCurrentPositionInDegrees() < 77.7) {
+                            intakeArmServoController.runToPosition(IntakeArmState.UPCC.getPos(),IntakeArmState.UPCC.isClockwise(), 1);
+                            intakeArmState = IntakeArmState.UPCC;
+                        } else {
+                            intakeArmServoController.runToPosition(IntakeArmState.UPC.getPos(),IntakeArmState.UPC.isClockwise(), 1);
+                            intakeArmState = IntakeArmState.UPC;
+                        }
+                }
+            }
+
 
 
 
@@ -561,18 +687,18 @@ public class teleopV2_servo2 extends LinearOpMode {
             int upDrivePos2 = verticalLeft.getCurrentPosition();
 
             // Show the elapsed game time and wheel power.
-            telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
-            telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
-            telemetry.addData("Lift Encoder Values: ", upDrivePos1 + ", " + upDrivePos2);
-
-            telemetry.addData("Claw Debounce: ", intakeRotateDebounce);
-            //telemetry.addData("Claw State: ", intakeRotateState);
-            //telemetry.addData("Depos Claw Position: ", intakeRotate.getPosition());
-
-            telemetry.addData("Wrist Servo Encoder: ", (wristServoController.getCurrentPositionInDegrees()));
-            telemetry.addData("Arm Servo Encoder: ", (intakeArmServoController.getCurrentPositionInDegrees()));
-            telemetry.addData("Depos Servo Encoder: ", (deposLeftController.getCurrentPositionInDegrees()));
+//            telemetry.addData("Status", "Run Time: " + runtime.toString());
+//            telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
+//            telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
+//            telemetry.addData("Lift Encoder Values: ", upDrivePos1 + ", " + upDrivePos2);
+//
+//            telemetry.addData("Claw Debounce: ", intakeRotateDebounce);
+//            //telemetry.addData("Claw State: ", intakeRotateState);
+//            //telemetry.addData("Depos Claw Position: ", intakeRotate.getPosition());
+//
+//            telemetry.addData("Wrist Servo Encoder: ", (wristServoController.getCurrentPositionInDegrees()));
+//            telemetry.addData("Arm Servo Encoder: ", (intakeArmServoController.getCurrentPositionInDegrees()));
+//            telemetry.addData("Depos Servo Encoder: ", (deposLeftController.getCurrentPositionInDegrees()));
 
             telemetry.update();
         }
