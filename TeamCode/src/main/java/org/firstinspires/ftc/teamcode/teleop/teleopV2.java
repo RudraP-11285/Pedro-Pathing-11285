@@ -379,15 +379,21 @@ public class teleopV2 extends LinearOpMode {
                 } else {
                     wristServoController.runToPosition(59, false, 2.5);
                 }
+                if (Math.abs(wristServoController.getCurrentPositionInDegrees() - 59) <= 35) {
+                    intakeArmState = true;
+                }
             } else {
                 if (wristServoController.getCurrentPositionInDegrees() > 9.16) {
                     wristServoController.runToPosition(9.16, false, 1);
                 } else {
                     wristServoController.runToPosition(9.16, true, 1);
                 }
+                if (Math.abs(wristServoController.getCurrentPositionInDegrees() - 9.16) <= 9.16) {
+                    intakeArmState = false;
+                }
             }
 
-
+/*
             if (gamepad2.b && (!intakeArmDebounce)) {
                 intakeArmDebounce = true;
                 if (intakeArmState) {
@@ -416,6 +422,7 @@ public class teleopV2 extends LinearOpMode {
                     intakeArmServoController.runToPosition(51.5, false, 1);
                 }
             }
+            */
 
 
             // Vertical Lift Motor Controls
