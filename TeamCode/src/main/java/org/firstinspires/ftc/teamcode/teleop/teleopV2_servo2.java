@@ -66,10 +66,36 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
+abstract class ServoClass {
+    private double[] positions;
+    private boolean[] directions;
+    public ServoClass(double[] positions, boolean[] directions) {
+        this.positions = positions;
+        this.directions = directions;
+    }
+    public double[] getPositions() {
+        return positions;
+    }
+    public boolean[] getDirections() {
+        return directions;
+    }
+}
+
+class ContinuousServo extends ServoClass {
+    public ContinuousServo(double[] positions, boolean[] directions) {
+        super(positions,directions);
+    }
+}
+class StaticServo extends ServoClass {
+    public StaticServo(double[] positions, boolean[] directions) {
+        super(positions,directions);
+    }
+}
+
 
 @TeleOp(name="Into the Deep: V2 TeleOp NEW^2", group="TeleOp")
 public class teleopV2_servo2 extends LinearOpMode {
-
+    StaticServo intakeArmObject = new StaticServo(new double[]{5.6,7.8,9},new boolean[]{true,false});
     // Declare OpMode members for each of the 4 drive motors and 3 horizontal/vertical lift motors
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotor leftFrontDrive = null; // Spongebob
@@ -212,6 +238,11 @@ public class teleopV2_servo2 extends LinearOpMode {
         DOWN(14)
     }
     */
+//    public void toggleContinuousServo(ContinuousServoController servo, Enum<?> state) {
+//        Class<? extends Enum> enumClass = state.getDeclaringClass();
+//        state = enumClass.valueOf("UPC");
+//
+//    }
     ClawRotateState clawRotateState = ClawRotateState.HORIZONTAL;
     @Override
     public void runOpMode() {
@@ -626,6 +657,9 @@ public class teleopV2_servo2 extends LinearOpMode {
                             intakeArmState = IntakeArmState.UPC;
                         }
                 }
+            }
+            if (gamepad2.options) {
+
             }
 
 
