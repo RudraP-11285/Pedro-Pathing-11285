@@ -420,6 +420,8 @@ public class teleopV2_servo2 extends LinearOpMode {
         boolean deposClawDebounce = false;
         boolean deposArmDebounce = false;
 
+        boolean[] continuousServoDebounces = {deposArmDebounce,intakeWristDebounce,intakeArmDebounce};
+
         boolean horizontalDriveLockDebounce = false;
         boolean horizontalDriveLockState = false;
 
@@ -660,7 +662,8 @@ public class teleopV2_servo2 extends LinearOpMode {
 */
             //NEW CONDITIONALS
 //            IntakeClawState tempClawState = IntakeClawState.OPEN;
-            if (gamepad2.x) {
+            if (gamepad2.x && !intakeClawDebounce) {
+                intakeClawDebounce = true;
                 switch (intakeClawState) {
                     case OPEN:
                         intakeClawState = IntakeClawState.INPROGRESS;
@@ -673,11 +676,13 @@ public class teleopV2_servo2 extends LinearOpMode {
 //                        tempClawState = IntakeClawState.OPEN;
                         break;
                 }
-            } else {
+            } else if (!gamepad2.x && intakeClawDebounce) {
 //                intakeClawState = tempClawState;
+                intakeClawDebounce = false;
             }
 
-            if (gamepad2.right_bumper) {
+            if (gamepad2.right_bumper && !intakeRotateDebounce) {
+                intakeRotateDebounce = true;
                 switch (clawRotateState) {
                     case HORIZONTAL:
                         clawRotateState = ClawRotateState.INPROGRESS;
@@ -690,6 +695,8 @@ public class teleopV2_servo2 extends LinearOpMode {
                         clawRotateState = ClawRotateState.HORIZONTAL;
                         break;
                 }
+            }else if (!gamepad2.right_bumper && intakeRotateDebounce) {
+                intakeRotateDebounce = false;
             }
             deposClawDebounce = false;
             if (gamepad2.y && !deposClawDebounce) {
@@ -706,7 +713,7 @@ public class teleopV2_servo2 extends LinearOpMode {
                         deposClawState = DeposClawState.OPEN;
                         break;
                 }
-            } else if (deposClawDebounce) {
+            } else if (!gamepad2.y && deposClawDebounce) {
                 deposClawDebounce = false;
             }
             //----------------------------------------------------------original switch case statements-----------------------------------------------------
@@ -799,7 +806,8 @@ public class teleopV2_servo2 extends LinearOpMode {
                 double[] servoPositions = currentServoVals.getPositions();
                 boolean[] servoDirections = currentServoVals.getDirections();
                 double[] servoTolerances = currentServoVals.getTolerances();
-                if (gamepadControl) {
+                if (gamepadControl && !continuousServoDebounces[i]) {
+                    continuousServoDebounces[i] = true;
                     switch (continuousServoStates[i]) {
                         case UPC:
                         case UPCC:
@@ -853,6 +861,8 @@ public class teleopV2_servo2 extends LinearOpMode {
                             continuousServoStates[i] = currentState;
                             break;
                     }
+                } else if (!gamepadControl && continuousServoDebounces[i]) {
+                    continuousServoDebounces[i] = false;
                 }
             }
 
