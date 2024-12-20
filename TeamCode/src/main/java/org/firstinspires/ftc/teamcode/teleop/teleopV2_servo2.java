@@ -341,7 +341,7 @@ public class teleopV2_servo2 extends LinearOpMode {
             }
         }
     }
-    
+
      */
     ClawRotateState clawRotateState = ClawRotateState.HORIZONTAL;
     @Override
@@ -659,20 +659,24 @@ public class teleopV2_servo2 extends LinearOpMode {
             }
 */
             //NEW CONDITIONALS
+            IntakeClawState tempClawState = IntakeClawState.INPROGRESS;
             if (gamepad2.x) {
                 switch (intakeClawState) {
                     case OPEN:
                         intakeClawState = IntakeClawState.INPROGRESS;
                         intakeClaw.setPosition(IntakeClawState.OPEN.getState());
-                        intakeClawState = IntakeClawState.CLOSE;
+                        tempClawState = IntakeClawState.CLOSE;
                         break;
                     case CLOSE:
                         intakeClawState = IntakeClawState.INPROGRESS;
                         intakeClaw.setPosition(IntakeClawState.CLOSE.getState());
-                        intakeClawState = IntakeClawState.OPEN;
+                        tempClawState = IntakeClawState.OPEN;
                         break;
                 }
+            } else {
+                intakeClawState = tempClawState;
             }
+            
             if (gamepad2.right_bumper) {
                 switch (clawRotateState) {
                     case HORIZONTAL:
