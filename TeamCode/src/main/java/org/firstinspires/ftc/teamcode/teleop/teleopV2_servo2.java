@@ -420,6 +420,8 @@ public class teleopV2_servo2 extends LinearOpMode {
         boolean deposClawDebounce = false;
         boolean deposArmDebounce = false;
 
+        boolean[] continuousServoDebounces = {deposArmDebounce,intakeWristDebounce,intakeArmDebounce};
+
         boolean horizontalDriveLockDebounce = false;
         boolean horizontalDriveLockState = false;
 
@@ -659,25 +661,28 @@ public class teleopV2_servo2 extends LinearOpMode {
             }
 */
             //NEW CONDITIONALS
-            IntakeClawState tempClawState = IntakeClawState.INPROGRESS;
-            if (gamepad2.x) {
+//            IntakeClawState tempClawState = IntakeClawState.OPEN;
+            if (gamepad2.x && !intakeClawDebounce) {
+                intakeClawDebounce = true;
                 switch (intakeClawState) {
                     case OPEN:
                         intakeClawState = IntakeClawState.INPROGRESS;
                         intakeClaw.setPosition(IntakeClawState.OPEN.getState());
-                        tempClawState = IntakeClawState.CLOSE;
+//                        tempClawState = IntakeClawState.CLOSE;
                         break;
                     case CLOSE:
                         intakeClawState = IntakeClawState.INPROGRESS;
                         intakeClaw.setPosition(IntakeClawState.CLOSE.getState());
-                        tempClawState = IntakeClawState.OPEN;
+//                        tempClawState = IntakeClawState.OPEN;
                         break;
                 }
-            } else {
-                intakeClawState = tempClawState;
+            } else if (!gamepad2.x && intakeClawDebounce) {
+//                intakeClawState = tempClawState;
+                intakeClawDebounce = false;
             }
 
-            if (gamepad2.right_bumper) {
+            if (gamepad2.right_bumper && !intakeRotateDebounce) {
+                intakeRotateDebounce = true;
                 switch (clawRotateState) {
                     case HORIZONTAL:
                         clawRotateState = ClawRotateState.INPROGRESS;
@@ -690,8 +695,12 @@ public class teleopV2_servo2 extends LinearOpMode {
                         clawRotateState = ClawRotateState.HORIZONTAL;
                         break;
                 }
+            }else if (!gamepad2.right_bumper && intakeRotateDebounce) {
+                intakeRotateDebounce = false;
             }
-            if (gamepad2.y) {
+            deposClawDebounce = false;
+            if (gamepad2.y && !deposClawDebounce) {
+                deposClawDebounce = true;
                 switch (deposClawState) {
                     case OPEN:
                         deposClawState = DeposClawState.INPROGRESS;
@@ -704,6 +713,8 @@ public class teleopV2_servo2 extends LinearOpMode {
                         deposClawState = DeposClawState.OPEN;
                         break;
                 }
+            } else if (!gamepad2.y && deposClawDebounce) {
+                deposClawDebounce = false;
             }
             //----------------------------------------------------------original switch case statements-----------------------------------------------------
 //            if (gamepad2.left_bumper) {
@@ -795,15 +806,26 @@ public class teleopV2_servo2 extends LinearOpMode {
                 double[] servoPositions = currentServoVals.getPositions();
                 boolean[] servoDirections = currentServoVals.getDirections();
                 double[] servoTolerances = currentServoVals.getTolerances();
-                if (gamepadControl) {
+                if (gamepadControl && !continuousServoDebounces[i]) {
+                    continuousServoDebounces[i] = true;
                     switch (continuousServoStates[i]) {
                         case UPC:
                         case UPCC:
                             continuousServoStates[i] = ContinuousServoState.INPROGRESS;
                             if (currentServo.getCurrentPositionInDegrees() > servoPositions[downPosIndex]) {
-                                currentState = ContinuousServoState.DOWNC;
+                                if (currentServo == intakeWrist) {
+                                    currentState = ContinuousServoState.DOWNCC;
+                                } else {
+                                    currentState = ContinuousServoState.DOWNC;
+                                }
+
                             } else {
-                                currentState = ContinuousServoState.DOWNCC;
+                                if (currentServo == intakeWrist) {
+                                    currentState = ContinuousServoState.DOWNC;
+                                } else {
+                                    currentState = ContinuousServoState.DOWNCC;
+                                }
+
                             }
                             j = currentState.getIndex();
                             currentServo.runToPosition(servoPositions[j],servoDirections[j],servoTolerances[j]);
@@ -839,42 +861,11 @@ public class teleopV2_servo2 extends LinearOpMode {
                             continuousServoStates[i] = currentState;
                             break;
                     }
+                } else if (!gamepadControl && continuousServoDebounces[i]) {
+                    continuousServoDebounces[i] = false;
                 }
             }
-            ContinuousServoState currentState; // Enumerator
-            ContinuousServo currentServoVals = continuousServoValues[0]; // Class Instance
-            ContinuousServoController currentServo = currentServoVals.getServo(); // Continuous Servo
-            int j = 0; //Index of servo state for accessing properties of ServoClass
-            int downPosIndex = ContinuousServoState.DOWNC.getIndex(); //Down position state index
-            int upPosIndex = ContinuousServoState.UPC.getIndex(); // Up position state index
-            double[] servoPositions = currentServoVals.getPositions();
-            boolean[] servoDirections = currentServoVals.getDirections();
-            double[] servoTolerances = currentServoVals.getTolerances();
-            if (gamepad2.right_bumper) {
-                switch (intakeArmState) {
-                    case UPC:
-                    case UPCC:
-                        continuousServoStates[0] = ContinuousServoState.INPROGRESS;
-                        if (currentServo.getCurrentPositionInDegrees() > servoPositions[downPosIndex]) {
-                            currentState = ContinuousServoState.DOWNC;
-                        } else {
-                            currentState = ContinuousServoState.DOWNCC;
-                        }
-                        j = currentState.getIndex();
-                        currentServo.runToPosition(servoPositions[j],servoDirections[j],servoTolerances[j]);
-                        break;
-                    case DOWNC:
-                    case DOWNCC:
-                        if (currentServo.getCurrentPositionInDegrees() < servoPositions[upPosIndex]) {
-                            currentState = ContinuousServoState.UPCC;
-                        } else {
-                            currentState = ContinuousServoState.UPC;
-                        }
-                        j = currentState.getIndex();
-                        currentServo.runToPosition(servoPositions[j],servoDirections[j],servoTolerances[j]);
-                        break;
-                }
-            }
+
             if (gamepad2.options) {
                 switch (armsState) {
                     case INTAKE:
