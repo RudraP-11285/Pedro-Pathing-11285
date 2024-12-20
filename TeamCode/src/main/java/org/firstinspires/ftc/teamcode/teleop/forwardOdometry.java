@@ -85,7 +85,7 @@ public class forwardOdometry extends OpMode {
     private final Pose startPose = new Pose(9, 96, Math.toRadians(0));
 
     /** Scoring Pose of our robot. It is facing the submersible at a -45 degree (315 degree) angle. */
-    private final Pose scorePose = new Pose(13.726, 129.318, Math.toRadians(315));
+    private final Pose scorePose = new Pose(13, 127.5, Math.toRadians(315));
 
     /** Lowest (First) Sample from the Spike Mark */
     private final Pose pickup1Pose = new Pose(37, 121, Math.toRadians(0));
@@ -197,7 +197,7 @@ public class forwardOdometry extends OpMode {
                 */
 
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(follower.getPose().getX() > (scorePose.getX() - 0.35) && follower.getPose().getY() > (scorePose.getY() - 0.35) && (!(verticalRight.getCurrentPosition() < 3150))) {
+                if(follower.getPose().getX() > (scorePose.getX() - 0.75) && follower.getPose().getY() > (scorePose.getY() - 0.75) && (!(verticalRight.getCurrentPosition() < 3150))) {
                     /* Score Preload */
                     verticalLeft.setPower(0);
                     verticalRight.setPower(0);
@@ -213,7 +213,7 @@ public class forwardOdometry extends OpMode {
                     deposLeftController.runToPosition(92, true, 10);
                 }
                 deposClaw.setPosition(0.8);
-                if (Math.abs(deposLeftController.getCurrentPositionInDegrees() - 92) < 2) {
+                if (Math.abs(deposLeftController.getCurrentPositionInDegrees() - 92) < 8) {
                     setPathState(3);
                 }
             case 3:
