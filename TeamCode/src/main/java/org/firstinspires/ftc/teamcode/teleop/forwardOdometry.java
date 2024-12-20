@@ -3,6 +3,12 @@ package org.firstinspires.ftc.teamcode.teleop;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.follower.*;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
@@ -25,6 +31,34 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.Timer;
 
 @Autonomous(name = "Example Auto Blue", group = "TeleOp")
 public class forwardOdometry extends OpMode {
+    private DcMotor verticalRight = null; // Aristotle
+    private DcMotor verticalLeft = null; // Plato
+    private DcMotor horizontalDrive = null; // Pythagoras
+
+    private CRServo intakeArm =  null; // Edward
+    private Servo intakeClaw =  null; // Servo that opens and closes intake claw
+    private Servo intakeRotate =  null; // Servo that rotates the claw left right
+    private CRServo intakeWrist =  null; // Servo that rotates the claw up down
+
+    // All 3 of the Outtake Servos plugged into Control Hub
+    private Servo deposClaw =  null; // Edward
+    private CRServo deposLeft =  null; // Stuart
+    private CRServo deposRight =  null; // Felicia
+
+    private AnalogInput depositEncoder1 = null;
+    private AnalogInput depositEncoder2 = null;
+
+    private AnalogInput wristEncoder1 = null;
+    private AnalogInput wristEncoder2 = null;
+    private AnalogInput armEncoder1 = null;
+    private AnalogInput armEncoder2 = null;
+
+    private DigitalChannel magLimVertical1 = null;
+    private DigitalChannel magLimVertical2 = null;
+    private DigitalChannel magLimHorizontal1 = null;
+    private DigitalChannel magLimHorizontal2 = null;
+
+    private DistanceSensor backDistance = null;
 
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
@@ -144,6 +178,26 @@ public class forwardOdometry extends OpMode {
                 follower.followPath(scorePreload);
                 setPathState(1);
                 break;
+            case 1:
+
+                /* You could check for
+                - Follower State: "if(!follower.isBusy() {}" (Though, I don't recommend this because it might not return due to holdEnd
+                - Time: "if(pathTimer.getElapsedTimeSeconds() > 1) {}"
+                - Robot Position: "if(follower.getPose().getX() > 36) {}"
+                */
+
+                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
+                if(follower.getPose().getX() > (scorePose.getX() - 1) && follower.getPose().getY() > (scorePose.getY() - 1)) {
+                    /* Score Preload */
+                    horizontalDrive.setTargetPosition(1000);
+                    horizontalDrive.setPower(0.5);
+                    horizontalDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    horizontalDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                    //follower.followPath(scorePreload,true);
+                    setPathState(2);
+                }
+                break;
         }
     }
 
@@ -173,6 +227,67 @@ public class forwardOdometry extends OpMode {
     /** This method is called once at the init of the OpMode. **/
     @Override
     public void init() {
+        verticalRight = hardwareMap.get(DcMotor.class, "verticalRight");
+        verticalLeft = hardwareMap.get(DcMotor.class, "verticalLeft");
+        horizontalDrive = hardwareMap.get(DcMotor.class, "horizontalDrive");
+
+        // All 4 input servos
+        intakeClaw = hardwareMap.get(Servo.class, "intakeClaw"); // Exp. Hub P4
+        intakeWrist = hardwareMap.get(CRServo.class, "intakeWrist"); // Exp. Hub P3
+        intakeRotate = hardwareMap.get(Servo.class, "intakeRotate"); // Exp. Hub P2
+        intakeArm = hardwareMap.get(CRServo.class, "intakeArm"); // Exp. Hub P1
+
+        // All 3 output servos
+        deposClaw = hardwareMap.get(Servo.class, "deposClaw");
+        deposLeft = hardwareMap.get(CRServo.class, "deposLeft");
+        deposRight = hardwareMap.get(CRServo.class, "deposRight");
+
+        // All 3 special servo encoders
+        depositEncoder1 = hardwareMap.get(AnalogInput.class, "depositEncoder1");
+        depositEncoder2 = hardwareMap.get(AnalogInput.class, "depositEncoder2");
+        wristEncoder1 = hardwareMap.get(AnalogInput.class, "wristEncoder1");
+        wristEncoder2 = hardwareMap.get(AnalogInput.class, "wristEncoder2");
+        armEncoder1 = hardwareMap.get(AnalogInput.class, "armEncoder1");
+        armEncoder2 = hardwareMap.get(AnalogInput.class, "armEncoder2");
+
+        // All the digital magnetic limit switches
+        magLimVertical1 = hardwareMap.get(DigitalChannel.class, "magLimVertical1");
+        magLimVertical2 = hardwareMap.get(DigitalChannel.class, "magLimVertical2");
+        magLimHorizontal1 = hardwareMap.get(DigitalChannel.class, "magLimHorizontal1");
+        magLimHorizontal2 = hardwareMap.get(DigitalChannel.class, "magLimHorizontal2");
+
+        // The singular distance sensor we have. Yay.
+        backDistance = hardwareMap.get(DistanceSensor.class, "backDistance");
+
+
+
+        ContinuousServoController deposLeftController = new ContinuousServoController(deposLeft, depositEncoder1);
+        ContinuousServoController deposRightController = new ContinuousServoController(deposRight, depositEncoder1);
+        ContinuousServoController wristServoController = new ContinuousServoController(intakeWrist, wristEncoder1);
+        ContinuousServoController intakeArmServoController = new ContinuousServoController(intakeArm, armEncoder1);
+
+
+        // Servo Toggle Debounces
+        Boolean intakeClawState = false; // Claw Open
+        Boolean intakeRotateState = false; // Rotated in State 1
+        Boolean intakeArmState = true; // Rotated in State 1
+        Boolean intakeWristState = true; // Rotated in State 1
+        Boolean deposClawState = true;
+        Boolean deposArmState = false;
+
+        Boolean intakeClawDebounce = false; // Claw Open
+        Boolean intakeRotateDebounce = false; // Rotated in State 1
+        Boolean intakeArmDebounce = false; // Rotated in State 1
+        Boolean intakeWristDebounce = false; // Rotated in State 1
+        Boolean deposClawDebounce = false;
+        Boolean deposArmDebounce = false;
+
+        Boolean horizontalDriveLockDebounce = false;
+        Boolean horizontalDriveLockState = false;
+
+        Boolean intakeState = false;
+        Boolean intakeBoolean = false;
+
         pathTimer = new Timer();
         opmodeTimer = new Timer();
 
