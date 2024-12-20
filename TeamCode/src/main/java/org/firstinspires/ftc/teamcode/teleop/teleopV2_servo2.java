@@ -276,16 +276,16 @@ public class teleopV2_servo2 extends LinearOpMode {
 //    }
     //--------------------------------------------------------------------------------------------------------------------
     /*
-    public void runServos(int startIndex, int endIndex, ContinuousServoState[] states, ContinuousServo[] values, ContinuousServoController[] servos) {
+    public void runServos(int startIndex, int endIndex, ContinuousServoState[] states, ContinuousServo[] values, ContinuousServoController[] servos, boolean controller1, boolean controller2, boolean controller3) {
         for (int i = 0; i<3; i++) { // Iterates through all continuous servo instances in list ContinuousServoValues
             boolean gamepadControl = false;
             switch (i) {
                 case 0:
-                    gamepadControl = gamepad2.left_bumper;
+                    gamepadControl = controller1;
                 case 1:
-                    gamepadControl = gamepad2.a;
+                    gamepadControl = controller2;
                 case 2:
-                    gamepadControl = gamepad2.b;
+                    gamepadControl = controller3;
             }
             ContinuousServoState currentState = states[i]; // Enumerator
             ContinuousServo currentServoVals = values[i]; // Class Instance
