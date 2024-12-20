@@ -676,7 +676,7 @@ public class teleopV2_servo2 extends LinearOpMode {
             } else {
                 intakeClawState = tempClawState;
             }
-            
+
             if (gamepad2.right_bumper) {
                 switch (clawRotateState) {
                     case HORIZONTAL:
@@ -836,6 +836,38 @@ public class teleopV2_servo2 extends LinearOpMode {
                     }
                 }
             }
+            ContinuousServoState currentState; // Enumerator
+            ContinuousServo currentServoVals = continuousServoValues[0]; // Class Instance
+            ContinuousServoController currentServo = currentServoVals.getServo(); // Continuous Servo
+            int j = 0; //Index of servo state for accessing properties of ServoClass
+            int downPosIndex = ContinuousServoState.DOWNC.getIndex(); //Down position state index
+            int upPosIndex = ContinuousServoState.UPC.getIndex(); // Up position state index
+            double[] servoPositions = currentServoVals.getPositions();
+            boolean[] servoDirections = currentServoVals.getDirections();
+            double[] servoTolerances = currentServoVals.getTolerances();
+            if (gamepad2.start) {
+                switch (intakeArmState) {
+                    case UPC:
+                    case UPCC:
+                        continuousServoStates[0] = ContinuousServoState.INPROGRESS;
+                        if (currentServo.getCurrentPositionInDegrees() > servoPositions[downPosIndex]) {
+                            currentState = ContinuousServoState.DOWNC;
+                        } else {
+                            currentState = ContinuousServoState.DOWNCC;
+                        }
+                        j = currentState.getIndex();
+                        currentServo.runToPosition(servoPositions[j],servoDirections[j],servoTolerances[j]);
+                    case DOWNC:
+                    case DOWNCC:
+                        if (currentServo.getCurrentPositionInDegrees() < servoPositions[upPosIndex]) {
+                            currentState = ContinuousServoState.UPCC;
+                        } else {
+                            currentState = ContinuousServoState.UPC;
+                        }
+                        j = currentState.getIndex();
+                        currentServo.runToPosition(servoPositions[j],servoDirections[j],servoTolerances[j]);
+                }
+            }
             if (gamepad2.options) {
                 switch (armsState) {
                     case INTAKE:
@@ -920,7 +952,6 @@ public class teleopV2_servo2 extends LinearOpMode {
 //            telemetry.addData("Wrist Servo Encoder: ", (wristServoController.getCurrentPositionInDegrees()));
 //            telemetry.addData("Arm Servo Encoder: ", (intakeArmServoController.getCurrentPositionInDegrees()));
 //            telemetry.addData("Depos Servo Encoder: ", (deposLeftController.getCurrentPositionInDegrees()));
-
             telemetry.update();
         }
     }
