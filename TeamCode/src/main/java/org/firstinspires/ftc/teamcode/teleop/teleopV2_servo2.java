@@ -778,10 +778,13 @@ public class teleopV2_servo2 extends LinearOpMode {
                 switch (i) {
                     case 0:
                         gamepadControl = gamepad2.left_bumper;
+                        break;
                     case 1:
                         gamepadControl = gamepad2.a;
+                        break;
                     case 2:
                         gamepadControl = gamepad2.b;
+                        break;
                 }
                 ContinuousServoState currentState = continuousServoStates[i]; // Enumerator
                 ContinuousServo currentServoVals = continuousServoValues[i]; // Class Instance
@@ -805,6 +808,7 @@ public class teleopV2_servo2 extends LinearOpMode {
                             j = currentState.getIndex();
                             currentServo.runToPosition(servoPositions[j],servoDirections[j],servoTolerances[j]);
                             continuousServoStates[i] = currentState;
+                            break;
                         case DOWNC:
                         case DOWNCC:
                             continuousServoStates[i] = ContinuousServoState.INPROGRESS;
@@ -833,6 +837,7 @@ public class teleopV2_servo2 extends LinearOpMode {
                             j = currentState.getIndex();
                             currentServo.runToPosition(servoPositions[j],servoDirections[j],servoTolerances[j]);
                             continuousServoStates[i] = currentState;
+                            break;
                     }
                 }
             }
@@ -845,7 +850,7 @@ public class teleopV2_servo2 extends LinearOpMode {
             double[] servoPositions = currentServoVals.getPositions();
             boolean[] servoDirections = currentServoVals.getDirections();
             double[] servoTolerances = currentServoVals.getTolerances();
-            if (gamepad2.start) {
+            if (gamepad2.right_bumper) {
                 switch (intakeArmState) {
                     case UPC:
                     case UPCC:
@@ -857,6 +862,7 @@ public class teleopV2_servo2 extends LinearOpMode {
                         }
                         j = currentState.getIndex();
                         currentServo.runToPosition(servoPositions[j],servoDirections[j],servoTolerances[j]);
+                        break;
                     case DOWNC:
                     case DOWNCC:
                         if (currentServo.getCurrentPositionInDegrees() < servoPositions[upPosIndex]) {
@@ -866,6 +872,7 @@ public class teleopV2_servo2 extends LinearOpMode {
                         }
                         j = currentState.getIndex();
                         currentServo.runToPosition(servoPositions[j],servoDirections[j],servoTolerances[j]);
+                        break;
                 }
             }
             if (gamepad2.options) {
