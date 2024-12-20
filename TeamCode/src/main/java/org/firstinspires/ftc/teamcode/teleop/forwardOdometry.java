@@ -23,7 +23,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.Timer;
  * @version 2.0, 11/28/2024
  */
 
-@Autonomous(name = "Example Auto Blue", group = "Examples")
+@Autonomous(name = "Example Auto Blue", group = "TeleOp")
 public class forwardOdometry extends OpMode {
 
     private Follower follower;
@@ -46,7 +46,7 @@ public class forwardOdometry extends OpMode {
     private final Pose startPose = new Pose(9, 96, Math.toRadians(0));
 
     /** Scoring Pose of our robot. It is facing the submersible at a -45 degree (315 degree) angle. */
-    private final Pose scorePose = new Pose(14, 129, Math.toRadians(315));
+    private final Pose scorePose = new Pose(14.726, 128.318, Math.toRadians(315));
 
     /** Lowest (First) Sample from the Spike Mark */
     private final Pose pickup1Pose = new Pose(37, 121, Math.toRadians(0));

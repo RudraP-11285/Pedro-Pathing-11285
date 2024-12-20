@@ -409,6 +409,7 @@ public class teleopV2 extends LinearOpMode {
             if (!gamepad2.b && intakeArmDebounce) {
                 intakeArmDebounce = false;
             }
+*/
             if (intakeArmState) {
                 if (intakeArmServoController.getCurrentPositionInDegrees() < 77.7) {
                     intakeArmServoController.runToPosition(77.7, false, 1);
@@ -422,7 +423,6 @@ public class teleopV2 extends LinearOpMode {
                     intakeArmServoController.runToPosition(51.5, false, 1);
                 }
             }
-            */
 
 
             // Vertical Lift Motor Controls
