@@ -58,6 +58,11 @@ public class forwardOdometry extends OpMode {
     private DigitalChannel magLimHorizontal1 = null;
     private DigitalChannel magLimHorizontal2 = null;
 
+    ContinuousServoController deposLeftController = null;
+    ContinuousServoController deposRightController = null;
+    ContinuousServoController wristServoController = null;
+    ContinuousServoController intakeArmServoController = null;
+
     private DistanceSensor backDistance = null;
 
     private Follower follower;
@@ -80,7 +85,7 @@ public class forwardOdometry extends OpMode {
     private final Pose startPose = new Pose(9, 96, Math.toRadians(0));
 
     /** Scoring Pose of our robot. It is facing the submersible at a -45 degree (315 degree) angle. */
-    private final Pose scorePose = new Pose(14.726, 128.318, Math.toRadians(315));
+    private final Pose scorePose = new Pose(13.726, 129.318, Math.toRadians(315));
 
     /** Lowest (First) Sample from the Spike Mark */
     private final Pose pickup1Pose = new Pose(37, 121, Math.toRadians(0));
@@ -175,10 +180,15 @@ public class forwardOdometry extends OpMode {
     public void autonomousPathUpdate() {
         switch (pathState) {
             case 0:
-                follower.followPath(scorePreload);
+                deposClaw.setPosition(0.8);
+                follower.followPath(scorePreload, true);
                 setPathState(1);
                 break;
             case 1:
+                if (verticalRight.getCurrentPosition() < 3150) {
+                    verticalLeft.setPower(-1);
+                    verticalRight.setPower(1);
+                }
 
                 /* You could check for
                 - Follower State: "if(!follower.isBusy() {}" (Though, I don't recommend this because it might not return due to holdEnd
@@ -187,17 +197,27 @@ public class forwardOdometry extends OpMode {
                 */
 
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(follower.getPose().getX() > (scorePose.getX() - 1) && follower.getPose().getY() > (scorePose.getY() - 1)) {
+                if(follower.getPose().getX() > (scorePose.getX() - 0.35) && follower.getPose().getY() > (scorePose.getY() - 0.35) && (!(verticalRight.getCurrentPosition() < 3150))) {
                     /* Score Preload */
-                    horizontalDrive.setTargetPosition(1000);
-                    horizontalDrive.setPower(0.5);
-                    horizontalDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    horizontalDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    verticalLeft.setPower(0);
+                    verticalRight.setPower(0);
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     //follower.followPath(scorePreload,true);
                     setPathState(2);
                 }
                 break;
+            case 2:
+                if (deposLeftController.getCurrentPositionInDegrees() < 92 && deposLeftController.getCurrentPositionInDegrees() > 30) {
+                    deposLeftController.runToPosition(92, false, 10);
+                } else {
+                    deposLeftController.runToPosition(92, true, 10);
+                }
+                deposClaw.setPosition(0.8);
+                if (Math.abs(deposLeftController.getCurrentPositionInDegrees() - 92) < 2) {
+                    setPathState(3);
+                }
+            case 3:
+                deposClaw.setPosition(0.3);
         }
     }
 
@@ -259,12 +279,10 @@ public class forwardOdometry extends OpMode {
         // The singular distance sensor we have. Yay.
         backDistance = hardwareMap.get(DistanceSensor.class, "backDistance");
 
-
-
-        ContinuousServoController deposLeftController = new ContinuousServoController(deposLeft, depositEncoder1);
-        ContinuousServoController deposRightController = new ContinuousServoController(deposRight, depositEncoder1);
-        ContinuousServoController wristServoController = new ContinuousServoController(intakeWrist, wristEncoder1);
-        ContinuousServoController intakeArmServoController = new ContinuousServoController(intakeArm, armEncoder1);
+        deposLeftController = new ContinuousServoController(deposLeft, depositEncoder1);
+        deposRightController = new ContinuousServoController(deposRight, depositEncoder1);
+        wristServoController = new ContinuousServoController(intakeWrist, wristEncoder1);
+        intakeArmServoController = new ContinuousServoController(intakeArm, armEncoder1);
 
 
         // Servo Toggle Debounces
