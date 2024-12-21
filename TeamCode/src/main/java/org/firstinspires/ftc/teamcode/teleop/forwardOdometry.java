@@ -89,7 +89,7 @@ public class forwardOdometry extends OpMode {
     private final Pose scorePose = new Pose(13, 127.5, Math.toRadians(315));
 
     /** Lowest (First) Sample from the Spike Mark */
-    private final Pose pickup1Pose = new Pose(30.6, 121.25, Math.toRadians(0));
+    private final Pose pickup1Pose = new Pose(33.87490039840637, 121.25, Math.toRadians(0));
 
     /** Middle (Second) Sample from the Spike Mark */
     private final Pose pickup2Pose = new Pose(43, 130, Math.toRadians(0));
@@ -214,11 +214,14 @@ public class forwardOdometry extends OpMode {
                 } else {
                     deposLeftController.runToPosition(92, true, 10);
                 }
-                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.5)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
+                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 1)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
                     deposClaw.setPosition(0.3);
                     setPathState(3);
+                    timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 }
+                break;
             case 3:
+                deposLeftController.runToPosition(14, false, 1);
                 if (verticalRight.getCurrentPosition() > 5) {
                     verticalLeft.setPower(1);
                     verticalRight.setPower(-1);
@@ -226,9 +229,9 @@ public class forwardOdometry extends OpMode {
                     verticalRight.setPower(0);
                     verticalLeft.setPower(0);
                 }
-                follower.followPath(scorePickup1, true);
+                follower.followPath(grabPickup1, true);
 
-                if(follower.getPose().getX() > (pickup1Pose.getX() - 0.75) && follower.getPose().getY() > (pickup1Pose.getY() - 0.75)) {
+                if(follower.getPose().getX() > (pickup1Pose.getX() - 0.9) && follower.getPose().getY() > (pickup1Pose.getY() - 0.75)) {
                     /* Score Preload */
                     verticalLeft.setPower(0);
                     verticalRight.setPower(0);
@@ -236,6 +239,7 @@ public class forwardOdometry extends OpMode {
                     //follower.followPath(scorePreload,true);
                     setPathState(4);
                 }
+                break;
             case 4:
                 if (verticalRight.getCurrentPosition() > 5) {
                     verticalLeft.setPower(1);
@@ -244,6 +248,7 @@ public class forwardOdometry extends OpMode {
                     verticalRight.setPower(0);
                     verticalLeft.setPower(0);
                 }
+                break;
         }
     }
 
