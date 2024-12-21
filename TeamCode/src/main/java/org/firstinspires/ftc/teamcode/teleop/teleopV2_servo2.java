@@ -669,12 +669,12 @@ public class teleopV2_servo2 extends LinearOpMode {
                     case OPEN:
                         intakeClawState = IntakeClawState.INPROGRESS;
                         intakeClaw.setPosition(IntakeClawState.OPEN.getState());
-//                        tempClawState = IntakeClawState.CLOSE;
+                        intakeClawState = IntakeClawState.CLOSE;
                         break;
                     case CLOSE:
                         intakeClawState = IntakeClawState.INPROGRESS;
                         intakeClaw.setPosition(IntakeClawState.CLOSE.getState());
-//                        tempClawState = IntakeClawState.OPEN;
+                        intakeClawState = IntakeClawState.OPEN;
                         break;
                 }
             } else if (!gamepad2.x && intakeClawDebounce) {
