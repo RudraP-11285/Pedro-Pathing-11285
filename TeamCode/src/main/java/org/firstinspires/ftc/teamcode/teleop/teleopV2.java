@@ -159,11 +159,11 @@ public class teleopV2 extends LinearOpMode {
 
 
         // Servo Toggle Debounces
-        Boolean intakeClawState = false; // Claw Open
+        Boolean intakeClawState = false; // Claw Close
         Boolean intakeRotateState = false; // Rotated in State 1
         Boolean intakeArmState = true; // Rotated in State 1
         Boolean intakeWristState = true; // Rotated in State 1
-        Boolean deposClawState = true;
+        Boolean deposClawState = true; // true = open, false = close
         Boolean deposArmState = false;
 
         Boolean intakeClawDebounce = false; // Claw Open
