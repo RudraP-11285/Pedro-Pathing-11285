@@ -64,7 +64,7 @@ public class forwardOdometry extends OpMode {
     ContinuousServoController intakeArmServoController = null;
 
     private DistanceSensor backDistance = null;
-    private double stage2StartTime = 0.0;
+    private double timeStamp = 0.0;
 
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
@@ -89,7 +89,7 @@ public class forwardOdometry extends OpMode {
     private final Pose scorePose = new Pose(13, 127.5, Math.toRadians(315));
 
     /** Lowest (First) Sample from the Spike Mark */
-    private final Pose pickup1Pose = new Pose(37, 121, Math.toRadians(0));
+    private final Pose pickup1Pose = new Pose(30.6, 121.25, Math.toRadians(0));
 
     /** Middle (Second) Sample from the Spike Mark */
     private final Pose pickup2Pose = new Pose(43, 130, Math.toRadians(0));
@@ -205,7 +205,7 @@ public class forwardOdometry extends OpMode {
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     //follower.followPath(scorePreload,true);
                     setPathState(2);
-                    stage2StartTime = opmodeTimer.getElapsedTimeSeconds();
+                    timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 }
                 break;
             case 2:
@@ -214,8 +214,35 @@ public class forwardOdometry extends OpMode {
                 } else {
                     deposLeftController.runToPosition(92, true, 10);
                 }
-                if (opmodeTimer.getElapsedTimeSeconds() > (stage2StartTime + 0.5)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
+                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.5)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
                     deposClaw.setPosition(0.3);
+                    setPathState(3);
+                }
+            case 3:
+                if (verticalRight.getCurrentPosition() > 5) {
+                    verticalLeft.setPower(1);
+                    verticalRight.setPower(-1);
+                } else {
+                    verticalRight.setPower(0);
+                    verticalLeft.setPower(0);
+                }
+                follower.followPath(scorePickup1, true);
+
+                if(follower.getPose().getX() > (pickup1Pose.getX() - 0.75) && follower.getPose().getY() > (pickup1Pose.getY() - 0.75)) {
+                    /* Score Preload */
+                    verticalLeft.setPower(0);
+                    verticalRight.setPower(0);
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                    //follower.followPath(scorePreload,true);
+                    setPathState(4);
+                }
+            case 4:
+                if (verticalRight.getCurrentPosition() > 5) {
+                    verticalLeft.setPower(1);
+                    verticalRight.setPower(-1);
+                } else {
+                    verticalRight.setPower(0);
+                    verticalLeft.setPower(0);
                 }
         }
     }
