@@ -89,7 +89,7 @@ public class forwardOdometry extends OpMode {
     private final Pose scorePose = new Pose(13, 127.5, Math.toRadians(315));
 
     /** Lowest (First) Sample from the Spike Mark */
-    private final Pose pickup1Pose = new Pose(33.87490039840637, 123.25, Math.toRadians(0));
+    private final Pose pickup1Pose = new Pose(32.5, 123.25, Math.toRadians(0));
 
     /** Middle (Second) Sample from the Spike Mark */
     private final Pose pickup2Pose = new Pose(43, 130, Math.toRadians(0));
@@ -253,20 +253,28 @@ public class forwardOdometry extends OpMode {
                 }
 
                 // Rotate Wrist and Arm Servos into POSITION!
-                if (wristServoController.getCurrentPositionInDegrees() < 59) {
-                    wristServoController.runToPosition(59, true, 2.5);
+                if (wristServoController.getCurrentPositionInDegrees() > 10.16) {
+                    wristServoController.runToPosition(10.16, false, 1);
                 } else {
-                    wristServoController.runToPosition(59, false, 2.5);
+                    wristServoController.runToPosition(10.16, true, 1);
                 }
-                if (Math.abs(wristServoController.getCurrentPositionInDegrees() - 59) <= 35) {
-                    if (intakeArmServoController.getCurrentPositionInDegrees() < 77.7) {
-                        intakeArmServoController.runToPosition(77.7, false, 1);
+                if (Math.abs(wristServoController.getCurrentPositionInDegrees() - 10.16) <= 10.16) {
+                    if (intakeArmServoController.getCurrentPositionInDegrees() > 51.5) {
+                        intakeArmServoController.runToPosition(51.5, true, 1);
                     } else {
-                        intakeArmServoController.runToPosition(77.7, true, 1);
+                        intakeArmServoController.runToPosition(51.5, false, 1);
                     }
-                    if (Math.abs(intakeArmServoController.getCurrentPositionInDegrees() - 77.7) < 5) {
+                    if (Math.abs(intakeArmServoController.getCurrentPositionInDegrees() - 51.5) < 2) {
                         intakeClaw.setPosition(1);
+                        setPathState(5);
                     }
+                }
+                break;
+            case 5:
+                if (intakeArmServoController.getCurrentPositionInDegrees() > 51.5) {
+                    intakeArmServoController.runToPosition(51.5, true, 1);
+                } else {
+                    intakeArmServoController.runToPosition(51.5, false, 1);
                 }
                 break;
         }
