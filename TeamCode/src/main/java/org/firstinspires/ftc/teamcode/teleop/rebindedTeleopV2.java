@@ -68,8 +68,8 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Into the Deep: V2 TeleOp", group="TeleOp")
-public class teleopV2 extends LinearOpMode {
+@TeleOp(name="Rebinded Into the Deep: V2 TeleOp", group="TeleOp")
+public class rebindedTeleopV2 extends LinearOpMode {
 
     // Declare OpMode members for each of the 4 drive motors and 3 horizontal/vertical lift motors
     private ElapsedTime runtime = new ElapsedTime();

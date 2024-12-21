@@ -86,23 +86,23 @@ public class forwardOdometry extends OpMode {
     private final Pose startPose = new Pose(9, 96, Math.toRadians(0));
 
     /** Scoring Pose of our robot. It is facing the submersible at a -45 degree (315 degree) angle. */
-    private final Pose scorePose = new Pose(13, 127.5, Math.toRadians(315));
+    private final Pose scorePose = new Pose(13, 129.5, Math.toRadians(315));
 
     /** Lowest (First) Sample from the Spike Mark */
     private final Pose pickup1Pose = new Pose(33.25, 124.25, Math.toRadians(0));
 
     /** Middle (Second) Sample from the Spike Mark */
-    private final Pose pickup2Pose = new Pose(43, 130, Math.toRadians(0));
+    private final Pose pickup2Pose = new Pose(33.25, 133.5, Math.toRadians(0));
 
     /** Highest (Third) Sample from the Spike Mark */
-    private final Pose pickup3Pose = new Pose(49, 135, Math.toRadians(0));
+    private final Pose pickup3Pose = new Pose(47.6, 126.79, Math.toRadians(90));
 
     /** Park Pose for our robot, after we do all of the scoring. */
-    private final Pose parkPose = new Pose(60, 98, Math.toRadians(90));
+    private final Pose parkPose = new Pose(64.25, 98, Math.toRadians(90));
 
     /** Park Control Pose for our robot, this is used to manipulate the bezier curve that we will create for the parking.
      * The Robot will not go to this pose, it is used a control point for our bezier curve. */
-    private final Pose parkControlPose = new Pose(60, 98, Math.toRadians(90));
+    private final Pose parkControlPose = new Pose(64.25091633466136, 129.0836653386454, Math.toRadians(90));
 
     /* These are our Paths and PathChains that we will define in buildPaths() */
     private Path scorePreload, park;
@@ -180,12 +180,12 @@ public class forwardOdometry extends OpMode {
      * The followPath() function sets the follower to run the specific path, but does NOT wait for it to finish before moving on. */
     public void autonomousPathUpdate() {
         switch (pathState) {
-            case 0:
+            case 0: // Move to Depos Position
                 deposClaw.setPosition(0.8);
                 follower.followPath(scorePreload, true);
                 setPathState(1);
                 break;
-            case 1:
+            case 1: // Bring lifts up as we move to Depos Position
                 if (verticalRight.getCurrentPosition() < 3150) {
                     verticalLeft.setPower(-1);
                     verticalRight.setPower(1);
@@ -208,7 +208,7 @@ public class forwardOdometry extends OpMode {
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 }
                 break;
-            case 2:
+            case 2: // Bring the Depos Arm Up
                 if (deposLeftController.getCurrentPositionInDegrees() < 92 && deposLeftController.getCurrentPositionInDegrees() > 30) {
                     deposLeftController.runToPosition(92, false, 10);
                 } else {
@@ -220,14 +220,14 @@ public class forwardOdometry extends OpMode {
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 }
                 break;
-            case 3:
+            case 3: // Bring the arm back, lift down, and move to grab
                 if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.2)) {
                     break;
                 }
                 deposLeftController.runToPosition(14, false, 1);
                 if (verticalRight.getCurrentPosition() > 5) {
-                    verticalLeft.setPower(1);
-                    verticalRight.setPower(-1);
+                    verticalLeft.setPower(0.7);
+                    verticalRight.setPower(-0.7);
                 } else {
                     verticalRight.setPower(0);
                     verticalLeft.setPower(0);
@@ -243,7 +243,7 @@ public class forwardOdometry extends OpMode {
                     setPathState(4);
                 }
                 break;
-            case 4:
+            case 4: // Keep bringing arm down, extend forward and pick up
                 if (verticalRight.getCurrentPosition() > 5) {
                     verticalLeft.setPower(1);
                     verticalRight.setPower(-1);
@@ -276,7 +276,7 @@ public class forwardOdometry extends OpMode {
                     }
                 }
                 break;
-            case 5:
+            case 5: // Hold the arm for a tiny bit to finish grabbing
                 if (wristServoController.getCurrentPositionInDegrees() > 10.16) {
                     wristServoController.runToPosition(10.16, false, 1);
                 } else {
@@ -288,11 +288,11 @@ public class forwardOdometry extends OpMode {
                     intakeArmServoController.runToPosition(51.5, false, 1);
                 }
 
-                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.25)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
+                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.15)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
                     setPathState(6);
                 }
                 break;
-            case 6:
+            case 6: // Move to score, extend back and get ready
                 follower.followPath(scorePickup1, true);
 
                 if (horizontalDrive.getCurrentPosition() > 0) {
@@ -319,17 +319,17 @@ public class forwardOdometry extends OpMode {
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 }
                 break;
-            case 7: // Transfer
+            case 7: // Transfer the piece
                 deposClaw.setPosition(0.8); // Close Depos Claw
-                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.3)) {
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.35)) {
                     break;
                 }
                 intakeClaw.setPosition(1);
                 setPathState(8);
                 timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 break;
-            case 8:
-                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.1)) {
+            case 8: // Start lifting up once piece is transferred
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.25)) {
                     break;
                 }
 
@@ -341,7 +341,7 @@ public class forwardOdometry extends OpMode {
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 }
                 break;
-            case 9:
+            case 9: // Bring Depos Arm Up and Drop
                 if (deposLeftController.getCurrentPositionInDegrees() < 92 && deposLeftController.getCurrentPositionInDegrees() > 30) {
                     deposLeftController.runToPosition(92, false, 10);
                 } else {
@@ -353,6 +353,154 @@ public class forwardOdometry extends OpMode {
                     setPathState(10);
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 }
+                break;
+            case 10: // Bring the arm back, lift down, and move to grab
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.2)) {
+                    break;
+                }
+                deposLeftController.runToPosition(14, false, 1);
+                if (verticalRight.getCurrentPosition() > 5) {
+                    verticalLeft.setPower(0.7);
+                    verticalRight.setPower(-0.7);
+                } else {
+                    verticalRight.setPower(0);
+                    verticalLeft.setPower(0);
+                }
+                follower.followPath(grabPickup2, true);
+
+                if(follower.getPose().getX() > (pickup2Pose.getX() - 0.75) && follower.getPose().getY() > (pickup2Pose.getY() - 0.75)) {
+                    /* Score Preload */
+                    verticalLeft.setPower(0);
+                    verticalRight.setPower(0);
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                    //follower.followPath(scorePreload,true);
+                    setPathState(11);
+                }
+                break;
+            case 11: // Keep bringing arm down, extend forward and pick up
+                if (verticalRight.getCurrentPosition() > 5) {
+                    verticalLeft.setPower(1);
+                    verticalRight.setPower(-1);
+                } else {
+                    verticalRight.setPower(0);
+                    verticalLeft.setPower(0);
+                }
+
+                if (horizontalDrive.getCurrentPosition() < 275) {
+                    horizontalDrive.setPower(0.2);
+                } else {
+                    horizontalDrive.setPower(0);
+                }
+                // Rotate Wrist and Arm Servos into POSITION!
+                if (wristServoController.getCurrentPositionInDegrees() > 10.16) {
+                    wristServoController.runToPosition(10.16, false, 1);
+                } else {
+                    wristServoController.runToPosition(10.16, true, 1);
+                }
+                if (Math.abs(wristServoController.getCurrentPositionInDegrees() - 10.16) <= 10.16) {
+                    if (intakeArmServoController.getCurrentPositionInDegrees() > 51.5) {
+                        intakeArmServoController.runToPosition(51.5, true, 1);
+                    } else {
+                        intakeArmServoController.runToPosition(51.5, false, 1);
+                    }
+                    if (Math.abs(intakeArmServoController.getCurrentPositionInDegrees() - 51.5) < 2) {
+                        intakeClaw.setPosition(0);
+                        setPathState(12);
+                        timeStamp = opmodeTimer.getElapsedTimeSeconds();
+                    }
+                }
+                break;
+            case 12: // Hold the arm for a tiny bit to finish grabbing
+                if (wristServoController.getCurrentPositionInDegrees() > 10.16) {
+                    wristServoController.runToPosition(10.16, false, 1);
+                } else {
+                    wristServoController.runToPosition(10.16, true, 1);
+                }
+                if (intakeArmServoController.getCurrentPositionInDegrees() > 51.5) {
+                    intakeArmServoController.runToPosition(51.5, true, 1);
+                } else {
+                    intakeArmServoController.runToPosition(51.5, false, 1);
+                }
+
+                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.15)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
+                    setPathState(13);
+                }
+                break;
+            case 13: // Move to score, extend back and get ready
+                follower.followPath(scorePickup2, true);
+
+                if (horizontalDrive.getCurrentPosition() > 0) {
+                    horizontalDrive.setPower(-0.2);
+                } else {
+                    horizontalDrive.setPower(0);
+                }
+
+                if (wristServoController.getCurrentPositionInDegrees() < 59) {
+                    wristServoController.runToPosition(59, true, 2.5);
+                } else {
+                    wristServoController.runToPosition(59, false, 2.5);
+                }
+                if (Math.abs(wristServoController.getCurrentPositionInDegrees() - 59) <= 35) {
+                    if (intakeArmServoController.getCurrentPositionInDegrees() < 77.7) {
+                        intakeArmServoController.runToPosition(77.7, false, 1);
+                    } else {
+                        intakeArmServoController.runToPosition(77.7, true, 1);
+                    }
+                }
+
+                if ((Math.abs(wristServoController.getCurrentPositionInDegrees() - 59) < 2) && (Math.abs(intakeArmServoController.getCurrentPositionInDegrees() - 77.7) < 2)) {
+                    setPathState(14);
+                    timeStamp = opmodeTimer.getElapsedTimeSeconds();
+                }
+                break;
+            case 14: // Transfer the piece
+                deposClaw.setPosition(0.8); // Close Depos Claw
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.35)) {
+                    break;
+                }
+                intakeClaw.setPosition(1);
+                setPathState(15);
+                timeStamp = opmodeTimer.getElapsedTimeSeconds();
+                break;
+            case 15: // Start lifting up once piece is transferred
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.25)) {
+                    break;
+                }
+
+                if (verticalRight.getCurrentPosition() < 3150) {
+                    verticalLeft.setPower(-1);
+                    verticalRight.setPower(1);
+                } else {
+                    setPathState(16);
+                    timeStamp = opmodeTimer.getElapsedTimeSeconds();
+                }
+                break;
+            case 16: // Bring Depos Arm Up and Drop
+                if (deposLeftController.getCurrentPositionInDegrees() < 92 && deposLeftController.getCurrentPositionInDegrees() > 30) {
+                    deposLeftController.runToPosition(92, false, 10);
+                } else {
+                    deposLeftController.runToPosition(92, true, 10);
+                }
+
+                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.75)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
+                    deposClaw.setPosition(0.3);
+                    setPathState(17);
+                    timeStamp = opmodeTimer.getElapsedTimeSeconds();
+                }
+                break;
+            case 17: // Go Park
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.2)) {
+                    break;
+                }
+                deposLeftController.runToPosition(14, false, 1);
+                if (verticalRight.getCurrentPosition() > 1320) {
+                    verticalLeft.setPower(0.5);
+                    verticalRight.setPower(-0.5);
+                } else {
+                    verticalRight.setPower(0);
+                    verticalLeft.setPower(0);
+                }
+                follower.followPath(park);
                 break;
         }
     }
