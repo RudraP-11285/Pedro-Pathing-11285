@@ -487,7 +487,7 @@ public class teleopV2 extends LinearOpMode {
 
             telemetry.addData("Claw Debounce: ", intakeRotateDebounce);
             telemetry.addData("Claw State: ", intakeRotateState);
-            //telemetry.addData("Depos Claw Position: ", intakeRotate.getPosition());
+            telemetry.addData("Horizontal Drive Position: ", horizontalDrive.getCurrentPosition());
 
             telemetry.addData("Wrist Servo Encoder: ", (wristServoController.getCurrentPositionInDegrees()));
             telemetry.addData("Arm Servo Encoder: ", (intakeArmServoController.getCurrentPositionInDegrees()));
