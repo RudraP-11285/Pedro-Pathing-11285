@@ -89,7 +89,7 @@ public class forwardOdometry extends OpMode {
     private final Pose scorePose = new Pose(13, 127.5, Math.toRadians(315));
 
     /** Lowest (First) Sample from the Spike Mark */
-    private final Pose pickup1Pose = new Pose(33.87490039840637, 121.25, Math.toRadians(0));
+    private final Pose pickup1Pose = new Pose(33.87490039840637, 123.25, Math.toRadians(0));
 
     /** Middle (Second) Sample from the Spike Mark */
     private final Pose pickup2Pose = new Pose(43, 130, Math.toRadians(0));
@@ -214,13 +214,16 @@ public class forwardOdometry extends OpMode {
                 } else {
                     deposLeftController.runToPosition(92, true, 10);
                 }
-                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 1)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
+                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.75)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
                     deposClaw.setPosition(0.3);
                     setPathState(3);
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 }
                 break;
             case 3:
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.2)) {
+                    break;
+                }
                 deposLeftController.runToPosition(14, false, 1);
                 if (verticalRight.getCurrentPosition() > 5) {
                     verticalLeft.setPower(1);
@@ -231,7 +234,7 @@ public class forwardOdometry extends OpMode {
                 }
                 follower.followPath(grabPickup1, true);
 
-                if(follower.getPose().getX() > (pickup1Pose.getX() - 0.9) && follower.getPose().getY() > (pickup1Pose.getY() - 0.75)) {
+                if(follower.getPose().getX() > (pickup1Pose.getX() - 0.75) && follower.getPose().getY() > (pickup1Pose.getY() - 0.75)) {
                     /* Score Preload */
                     verticalLeft.setPower(0);
                     verticalRight.setPower(0);
@@ -247,6 +250,23 @@ public class forwardOdometry extends OpMode {
                 } else {
                     verticalRight.setPower(0);
                     verticalLeft.setPower(0);
+                }
+
+                // Rotate Wrist and Arm Servos into POSITION!
+                if (wristServoController.getCurrentPositionInDegrees() < 59) {
+                    wristServoController.runToPosition(59, true, 2.5);
+                } else {
+                    wristServoController.runToPosition(59, false, 2.5);
+                }
+                if (Math.abs(wristServoController.getCurrentPositionInDegrees() - 59) <= 35) {
+                    if (intakeArmServoController.getCurrentPositionInDegrees() < 77.7) {
+                        intakeArmServoController.runToPosition(77.7, false, 1);
+                    } else {
+                        intakeArmServoController.runToPosition(77.7, true, 1);
+                    }
+                    if (Math.abs(intakeArmServoController.getCurrentPositionInDegrees() - 77.7) < 5) {
+                        intakeClaw.setPosition(1);
+                    }
                 }
                 break;
         }
