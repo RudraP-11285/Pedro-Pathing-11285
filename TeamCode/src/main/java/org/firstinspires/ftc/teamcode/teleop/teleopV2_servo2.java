@@ -698,7 +698,6 @@ public class teleopV2_servo2 extends LinearOpMode {
             }else if (!gamepad2.right_bumper && intakeRotateDebounce) {
                 intakeRotateDebounce = false;
             }
-            deposClawDebounce = false;
             if (gamepad2.y && !deposClawDebounce) {
                 deposClawDebounce = true;
                 switch (deposClawState) {
@@ -786,6 +785,7 @@ public class teleopV2_servo2 extends LinearOpMode {
             //---------------------------------------------------------------------------------------------------------------------------------------------
             for (int i = 0; i<3; i++) { // Iterates through all continuous servo instances in list ContinuousServoValues
                 boolean gamepadControl = false;
+                //0-Depos Arm 1-Intake Wrist 2-Intake Arm
                 switch (i) {
                     case 0:
                         gamepadControl = gamepad2.left_bumper;
@@ -813,18 +813,20 @@ public class teleopV2_servo2 extends LinearOpMode {
                         case UPCC:
                             continuousServoStates[i] = ContinuousServoState.INPROGRESS;
                             if (currentServo.getCurrentPositionInDegrees() > servoPositions[downPosIndex]) {
-                                if (currentServo == intakeWrist) {
+                                currentState = ContinuousServoState.DOWNC;
+                                if (currentServo == deposLeftController) {
                                     currentState = ContinuousServoState.DOWNCC;
                                 } else {
                                     currentState = ContinuousServoState.DOWNC;
                                 }
 
                             } else {
-                                if (currentServo == intakeWrist) {
+                                if (currentServo == deposLeftController) {
                                     currentState = ContinuousServoState.DOWNC;
                                 } else {
                                     currentState = ContinuousServoState.DOWNCC;
                                 }
+                                currentState = ContinuousServoState.DOWNCC;
 
                             }
                             j = currentState.getIndex();
@@ -865,17 +867,33 @@ public class teleopV2_servo2 extends LinearOpMode {
                     continuousServoDebounces[i] = false;
                 }
             }
-
+            ContinuousServoState tempState;
             if (gamepad2.options) {
                 switch (armsState) {
                     case INTAKE:
-                        for (int i=0;i<2;i++) {
-                            switch (continuousServoStates[i]) {
-
+                        int count = 0;
+                        for (int i=0;i<3;i++) {
+                            if (continuousServoStates[i] == ContinuousServoState.UPC || continuousServoStates[i] == ContinuousServoState.UPCC) {
+                                count++;
                             }
                         }
+                        if (Math.abs(horizontalDrive.getCurrentPosition()) < 10) {
+                            count++;
+                        }
+                        switch (deposClawState) {
+                            case OPEN:
+                                break;
+                            case CLOSE:
+                                break;
+                        }
+                        if (count == 4) {
+                            armsState = ArmsStates.TRANSFER;
+                        }
+                        break;
                     case TRANSFER:
+                        break;
                     case DEPOS:
+                        break;
                 }
             }
 
