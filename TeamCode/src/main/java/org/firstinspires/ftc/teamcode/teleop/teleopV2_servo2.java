@@ -839,7 +839,7 @@ public class teleopV2_servo2 extends LinearOpMode {
                             break;
                         case DOWNC:
                         case DOWNCC:
-                            continuousServoStates[i] = ContinuousServoState.INPROGRESS;
+//                            continuousServoStates[i] = ContinuousServoState.INPROGRESS;
                             if (currentServo == deposLeftController) {
                                 if (currentServo.getCurrentPositionInDegrees() < servoPositions[ContinuousServoState.UPC.getIndex()] && currentServo.getCurrentPositionInDegrees() > 30) {
                                     currentState = ContinuousServoState.UPCC;
