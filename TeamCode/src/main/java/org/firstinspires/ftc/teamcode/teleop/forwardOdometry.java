@@ -89,7 +89,7 @@ public class forwardOdometry extends OpMode {
     private final Pose scorePose = new Pose(13, 127.5, Math.toRadians(315));
 
     /** Lowest (First) Sample from the Spike Mark */
-    private final Pose pickup1Pose = new Pose(32.5, 123.25, Math.toRadians(0));
+    private final Pose pickup1Pose = new Pose(33.25, 124.25, Math.toRadians(0));
 
     /** Middle (Second) Sample from the Spike Mark */
     private final Pose pickup2Pose = new Pose(43, 130, Math.toRadians(0));
@@ -252,6 +252,11 @@ public class forwardOdometry extends OpMode {
                     verticalLeft.setPower(0);
                 }
 
+                if (horizontalDrive.getCurrentPosition() < 275) {
+                    horizontalDrive.setPower(0.2);
+                } else {
+                    horizontalDrive.setPower(0);
+                }
                 // Rotate Wrist and Arm Servos into POSITION!
                 if (wristServoController.getCurrentPositionInDegrees() > 10.16) {
                     wristServoController.runToPosition(10.16, false, 1);
@@ -265,16 +270,88 @@ public class forwardOdometry extends OpMode {
                         intakeArmServoController.runToPosition(51.5, false, 1);
                     }
                     if (Math.abs(intakeArmServoController.getCurrentPositionInDegrees() - 51.5) < 2) {
-                        intakeClaw.setPosition(1);
+                        intakeClaw.setPosition(0);
                         setPathState(5);
+                        timeStamp = opmodeTimer.getElapsedTimeSeconds();
                     }
                 }
                 break;
             case 5:
+                if (wristServoController.getCurrentPositionInDegrees() > 10.16) {
+                    wristServoController.runToPosition(10.16, false, 1);
+                } else {
+                    wristServoController.runToPosition(10.16, true, 1);
+                }
                 if (intakeArmServoController.getCurrentPositionInDegrees() > 51.5) {
                     intakeArmServoController.runToPosition(51.5, true, 1);
                 } else {
                     intakeArmServoController.runToPosition(51.5, false, 1);
+                }
+
+                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.25)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
+                    setPathState(6);
+                }
+                break;
+            case 6:
+                follower.followPath(scorePickup1, true);
+
+                if (horizontalDrive.getCurrentPosition() > 0) {
+                    horizontalDrive.setPower(-0.2);
+                } else {
+                    horizontalDrive.setPower(0);
+                }
+
+                if (wristServoController.getCurrentPositionInDegrees() < 59) {
+                    wristServoController.runToPosition(59, true, 2.5);
+                } else {
+                    wristServoController.runToPosition(59, false, 2.5);
+                }
+                if (Math.abs(wristServoController.getCurrentPositionInDegrees() - 59) <= 35) {
+                    if (intakeArmServoController.getCurrentPositionInDegrees() < 77.7) {
+                        intakeArmServoController.runToPosition(77.7, false, 1);
+                    } else {
+                        intakeArmServoController.runToPosition(77.7, true, 1);
+                    }
+                }
+
+                if ((Math.abs(wristServoController.getCurrentPositionInDegrees() - 59) < 2) && (Math.abs(intakeArmServoController.getCurrentPositionInDegrees() - 77.7) < 2)) {
+                    setPathState(7);
+                    timeStamp = opmodeTimer.getElapsedTimeSeconds();
+                }
+                break;
+            case 7: // Transfer
+                deposClaw.setPosition(0.8); // Close Depos Claw
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.3)) {
+                    break;
+                }
+                intakeClaw.setPosition(1);
+                setPathState(8);
+                timeStamp = opmodeTimer.getElapsedTimeSeconds();
+                break;
+            case 8:
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.1)) {
+                    break;
+                }
+
+                if (verticalRight.getCurrentPosition() < 3150) {
+                    verticalLeft.setPower(-1);
+                    verticalRight.setPower(1);
+                } else {
+                   setPathState(9);
+                    timeStamp = opmodeTimer.getElapsedTimeSeconds();
+                }
+                break;
+            case 9:
+                if (deposLeftController.getCurrentPositionInDegrees() < 92 && deposLeftController.getCurrentPositionInDegrees() > 30) {
+                    deposLeftController.runToPosition(92, false, 10);
+                } else {
+                    deposLeftController.runToPosition(92, true, 10);
+                }
+
+                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.75)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
+                    deposClaw.setPosition(0.3);
+                    setPathState(10);
+                    timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 }
                 break;
         }
@@ -366,6 +443,8 @@ public class forwardOdometry extends OpMode {
 
         Boolean intakeState = false;
         Boolean intakeBoolean = false;
+
+        horizontalDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         pathTimer = new Timer();
         opmodeTimer = new Timer();
