@@ -213,7 +213,7 @@ public class forwardOdometry extends OpMode {
                     deposLeftController.runToPosition(92, true, 10);
                 }
                 deposClaw.setPosition(0.8);
-                if (Math.abs(deposLeftController.getCurrentPositionInDegrees() - 92) < 8) {
+                if (Math.abs(deposLeftController.getCurrentPositionInDegrees() - 92) < 3) {
                     setPathState(3);
                 }
             case 3:
