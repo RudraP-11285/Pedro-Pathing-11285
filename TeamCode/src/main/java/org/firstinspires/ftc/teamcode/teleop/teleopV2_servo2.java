@@ -788,7 +788,7 @@ public class teleopV2_servo2 extends LinearOpMode {
                 //0-Depos Arm 1-Intake Wrist 2-Intake Arm
                 switch (i) {
                     case 0:
-                        gamepadControl = gamepad2.left_bumper;
+                        gamepadControl = false;
                         break;
                     case 1:
                         gamepadControl = gamepad2.a;
@@ -866,6 +866,31 @@ public class teleopV2_servo2 extends LinearOpMode {
                 } else if (!gamepadControl && continuousServoDebounces[i]) {
                     continuousServoDebounces[i] = false;
                 }
+            }
+
+            int j;
+            ContinuousServoState currentState = deposArmState.UPC;
+            if (gamepad2.right_bumper && !deposArmDebounce) {
+                deposArmDebounce = true;
+                switch (deposArmState) {
+                    case UPC:
+                    case UPCC:
+                        if (deposLeftController.getCurrentPositionInDegrees() > deposArmValues.getPositions()[ContinuousServoState.DOWNC.getIndex()]) {
+
+                        }
+                        currentState = ContinuousServoState.DOWNC;
+                    case DOWNC:
+                    case DOWNCC:
+                        if (deposLeftController.getCurrentPositionInDegrees() < deposArmValues.getPositions()[ContinuousServoState.UPC.getIndex()] && deposLeftController.getCurrentPositionInDegrees() > 30) {
+                            currentState = ContinuousServoState.UPCC;
+                        } else {
+                            currentState = ContinuousServoState.UPC;
+                        }
+                }
+                j = currentState.getIndex();
+                deposLeftController.runToPosition(deposArmValues.getPositions()[j],deposArmValues.getDirections()[j],deposArmValues.getTolerances()[j]);
+            } else if (!gamepad2.right_bumper && deposArmDebounce) {
+                deposArmDebounce = false;
             }
             ContinuousServoState tempState;
             if (gamepad2.options) {
