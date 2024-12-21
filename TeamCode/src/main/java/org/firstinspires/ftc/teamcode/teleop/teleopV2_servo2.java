@@ -421,6 +421,7 @@ public class teleopV2_servo2 extends LinearOpMode {
         boolean deposArmDebounce = false;
 
         boolean[] continuousServoDebounces = {deposArmDebounce,intakeWristDebounce,intakeArmDebounce};
+        int[] stateIndexes = {0,0,0};
 
         boolean horizontalDriveLockDebounce = false;
         boolean horizontalDriveLockState = false;
@@ -800,7 +801,8 @@ public class teleopV2_servo2 extends LinearOpMode {
                 ContinuousServoState currentState = continuousServoStates[i]; // Enumerator
                 ContinuousServo currentServoVals = continuousServoValues[i]; // Class Instance
                 ContinuousServoController currentServo = currentServoVals.getServo(); // Continuous Servo
-                int j = 0; //Index of servo state for accessing properties of ServoClass
+//                int j = stateIndexes[i]; //Index of servo state for accessing properties of ServoClass
+                int j = 0;
                 int downPosIndex = ContinuousServoState.DOWNC.getIndex(); //Down position state index
                 int upPosIndex = ContinuousServoState.UPC.getIndex(); // Up position state index
                 double[] servoPositions = currentServoVals.getPositions();
@@ -829,7 +831,9 @@ public class teleopV2_servo2 extends LinearOpMode {
                                 currentState = ContinuousServoState.DOWNCC;
 
                             }
-                            j = currentState.getIndex();
+//                            j = currentState.getIndex();
+                            stateIndexes[i] = currentState.getIndex();
+                            j = stateIndexes[i];
                             currentServo.runToPosition(servoPositions[j],servoDirections[j],servoTolerances[j]);
                             continuousServoStates[i] = currentState;
                             break;
@@ -838,9 +842,9 @@ public class teleopV2_servo2 extends LinearOpMode {
                             continuousServoStates[i] = ContinuousServoState.INPROGRESS;
                             if (currentServo == deposLeftController) {
                                 if (currentServo.getCurrentPositionInDegrees() < servoPositions[ContinuousServoState.UPC.getIndex()] && currentServo.getCurrentPositionInDegrees() > 30) {
-                                    j = ContinuousServoState.UPCC.getIndex();
+                                    currentState = ContinuousServoState.UPCC;
                                 } else {
-                                    j = ContinuousServoState.UPC.getIndex();
+                                    currentState = ContinuousServoState.UPC;
                                 }
                             } else {
                                 if (currentServo.getCurrentPositionInDegrees() < servoPositions[upPosIndex]) {
@@ -858,7 +862,9 @@ public class teleopV2_servo2 extends LinearOpMode {
 
                                 }
                             }
-                            j = currentState.getIndex();
+//                            j = currentState.getIndex();
+                            stateIndexes[i] = currentState.getIndex();
+                            j = stateIndexes[i];
                             currentServo.runToPosition(servoPositions[j],servoDirections[j],servoTolerances[j]);
                             continuousServoStates[i] = currentState;
                             break;
@@ -870,7 +876,7 @@ public class teleopV2_servo2 extends LinearOpMode {
 
             int j;
             ContinuousServoState currentState = deposArmState.UPC;
-            if (gamepad2.right_bumper && !deposArmDebounce) {
+            if (gamepad2.left_bumper && !deposArmDebounce) {
                 deposArmDebounce = true;
                 switch (deposArmState) {
                     case UPC:
