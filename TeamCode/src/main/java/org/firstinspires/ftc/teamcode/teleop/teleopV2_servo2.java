@@ -784,7 +784,7 @@ public class teleopV2_servo2 extends LinearOpMode {
 //                }
 //            }
             //---------------------------------------------------------------------------------------------------------------------------------------------
-            for (int i = 0; i<3; i++) { // Iterates through all continuous servo instances in list ContinuousServoValues
+            for (int i = 1; i<3; i++) { // Iterates through all continuous servo instances in list ContinuousServoValues
                 boolean gamepadControl = false;
                 //0-Depos Arm 1-Intake Wrist 2-Intake Arm
                 switch (i) {
@@ -813,7 +813,7 @@ public class teleopV2_servo2 extends LinearOpMode {
                     switch (continuousServoStates[i]) {
                         case UPC:
                         case UPCC:
-                            continuousServoStates[i] = ContinuousServoState.INPROGRESS;
+//                            continuousServoStates[i] = ContinuousServoState.INPROGRESS;
                             if (currentServo.getCurrentPositionInDegrees() > servoPositions[downPosIndex]) {
                                 currentState = ContinuousServoState.DOWNC;
                                 if (currentServo == deposLeftController) {
@@ -839,7 +839,7 @@ public class teleopV2_servo2 extends LinearOpMode {
                             break;
                         case DOWNC:
                         case DOWNCC:
-                            continuousServoStates[i] = ContinuousServoState.INPROGRESS;
+//                            continuousServoStates[i] = ContinuousServoState.INPROGRESS;
                             if (currentServo == deposLeftController) {
                                 if (currentServo.getCurrentPositionInDegrees() < servoPositions[ContinuousServoState.UPC.getIndex()] && currentServo.getCurrentPositionInDegrees() > 30) {
                                     currentState = ContinuousServoState.UPCC;
