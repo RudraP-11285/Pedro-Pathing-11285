@@ -64,6 +64,7 @@ public class forwardOdometry extends OpMode {
     ContinuousServoController intakeArmServoController = null;
 
     private DistanceSensor backDistance = null;
+    private double stage2StartTime = 0.0;
 
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
@@ -204,6 +205,7 @@ public class forwardOdometry extends OpMode {
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     //follower.followPath(scorePreload,true);
                     setPathState(2);
+                    stage2StartTime = opmodeTimer.getElapsedTimeSeconds();
                 }
                 break;
             case 2:
@@ -212,12 +214,9 @@ public class forwardOdometry extends OpMode {
                 } else {
                     deposLeftController.runToPosition(92, true, 10);
                 }
-                deposClaw.setPosition(0.8);
-                if (Math.abs(deposLeftController.getCurrentPositionInDegrees() - 92) < 3) {
-                    setPathState(3);
+                if (opmodeTimer.getElapsedTimeSeconds() > (stage2StartTime + 0.5)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
+                    deposClaw.setPosition(0.3);
                 }
-            case 3:
-                deposClaw.setPosition(0.3);
         }
     }
 
@@ -241,6 +240,8 @@ public class forwardOdometry extends OpMode {
         telemetry.addData("x", follower.getPose().getX());
         telemetry.addData("y", follower.getPose().getY());
         telemetry.addData("heading", follower.getPose().getHeading());
+        telemetry.addData("depos arm value!", deposLeftController.getCurrentPositionInDegrees());
+        telemetry.addData("claw pos!", deposClaw.getPosition());
         telemetry.update();
     }
 
