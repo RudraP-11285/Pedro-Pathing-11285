@@ -151,7 +151,6 @@ public class teleopV2 extends LinearOpMode {
         backDistance = hardwareMap.get(DistanceSensor.class, "backDistance");
 
 
-
         ContinuousServoController deposLeftController = new ContinuousServoController(deposLeft, depositEncoder1);
         ContinuousServoController deposRightController = new ContinuousServoController(deposRight, depositEncoder1);
         ContinuousServoController wristServoController = new ContinuousServoController(intakeWrist, wristEncoder1);
@@ -179,8 +178,14 @@ public class teleopV2 extends LinearOpMode {
         Boolean intakeState = false;
         Boolean intakeBoolean = false;
 
-        double targetposition; // temp
+        String robotState = "Transfer"; // Transfer, Depos, Grab
+        String armState = "Transfer";
+        switch (robotState) {
+            case "Transfer":
+                robotState = "Depos";
+            case "Depos":
 
+        }
 
         // ########################################################################################
         // !!!!            IMPORTANT Drive Information. Test your motor directions.            !!!!
