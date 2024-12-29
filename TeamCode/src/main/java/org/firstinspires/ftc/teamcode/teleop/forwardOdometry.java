@@ -705,7 +705,7 @@ public class forwardOdometry extends OpMode {
         deposLeftController = new ContinuousServoController(deposLeft, depositEncoder1);
         deposRightController = new ContinuousServoController(deposRight, depositEncoder1);
         wristServoController = new ContinuousServoController(intakeWrist, wristEncoder1);
-        intakeArmServoController = new ContinuousServoController(intakeArm, armEncoder1);
+        intakeArmServoController = new ContinuousServoController(intakeWrist, armEncoder1); // Dummy servo
 
 
         // Servo Toggle Debounces

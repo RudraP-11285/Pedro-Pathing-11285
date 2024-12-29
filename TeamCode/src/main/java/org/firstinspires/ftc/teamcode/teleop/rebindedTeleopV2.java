@@ -82,7 +82,7 @@ public class rebindedTeleopV2 extends LinearOpMode {
     private DcMotor horizontalDrive = null; // Pythagoras
 
     // All 5 of the Intake Servos plugged into Expansion Hub 3
-    private CRServo intakeArm =  null; // Edward
+    private Servo intakeArm =  null; // Edward
     private Servo intakeClaw =  null; // Servo that opens and closes intake claw
     private Servo intakeRotate =  null; // Servo that rotates the claw left right
     private CRServo intakeWrist =  null; // Servo that rotates the claw up down
@@ -108,7 +108,7 @@ public class rebindedTeleopV2 extends LinearOpMode {
     ContinuousServoController deposLeftController = null;
     ContinuousServoController deposRightController = null;
     ContinuousServoController wristServoController = null;
-    ContinuousServoController intakeArmServoController = null;
+    //ContinuousServoController intakeArmServoController = null;
 
     private DistanceSensor backDistance = null;
 
@@ -129,6 +129,9 @@ public class rebindedTeleopV2 extends LinearOpMode {
     Boolean intakeState = true;
     Boolean intakeDebounce = false;
 
+    Boolean grabbing = false;
+    double grabTimer = 0.0;
+
     @Override
     public void runOpMode() {
 
@@ -148,7 +151,7 @@ public class rebindedTeleopV2 extends LinearOpMode {
         intakeClaw = hardwareMap.get(Servo.class, "intakeClaw"); // Exp. Hub P4
         intakeWrist = hardwareMap.get(CRServo.class, "intakeWrist"); // Exp. Hub P3
         intakeRotate = hardwareMap.get(Servo.class, "intakeRotate"); // Exp. Hub P2
-        intakeArm = hardwareMap.get(CRServo.class, "intakeArm"); // Exp. Hub P1
+        intakeArm = hardwareMap.get(Servo.class, "intakeArm"); // Exp. Hub P1
 
         // All 3 output servos
         deposClaw = hardwareMap.get(Servo.class, "deposClaw");
@@ -176,7 +179,7 @@ public class rebindedTeleopV2 extends LinearOpMode {
         ContinuousServoController deposLeftController = new ContinuousServoController(deposLeft, depositEncoder1);
         ContinuousServoController deposRightController = new ContinuousServoController(deposRight, depositEncoder1);
         ContinuousServoController wristServoController = new ContinuousServoController(intakeWrist, wristEncoder1);
-        ContinuousServoController intakeArmServoController = new ContinuousServoController(intakeArm, armEncoder1);
+        //ContinuousServoController intakeArmServoController = new ContinuousServoController(intakeArm, armEncoder1);
 
 
         String robotState = "Transfer";
@@ -209,7 +212,7 @@ public class rebindedTeleopV2 extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
-            robotState = getRobotState(intakeArmServoController, wristServoController, deposLeftController);
+            robotState = getRobotState(wristServoController, deposLeftController);
 
             double lateralBoost = 0;
             if (gamepad1.dpad_left) {
@@ -259,6 +262,7 @@ public class rebindedTeleopV2 extends LinearOpMode {
 
 
 
+            // Bring everything back to the transfer position
             if (gamepad2.b) {
                 intakeState = true;
                 intakeRotateState = false;
@@ -266,20 +270,38 @@ public class rebindedTeleopV2 extends LinearOpMode {
                 deposArmState = false;
                 deposClawState = false;
 
+
+                if ((horizontalDrive.getCurrentPosition() > 300 && verticalRight.getCurrentPosition() > 25) || (horizontalDrive.getCurrentPosition() > 10 && verticalRight.getCurrentPosition() < 25))  {
+                    horizontalDrive.setPower(-1);
+                } else {
+                    horizontalDrive.setPower(0);
+                }
+
+                if (verticalRight.getCurrentPosition() > 5) {
+                    verticalLeft.setPower(1);
+                    verticalRight.setPower(-1);
+                } else {
+                    verticalLeft.setPower(0);
+                    verticalRight.setPower(0);
+                }
             }
 
 
 
             // NOTE: All code below controls the intake
             if (intakeState) {
-                moveWristTo("Open", wristServoController);
+                moveWristTo("Close", wristServoController);
                 if (Math.abs(wristServoController.getCurrentPositionInDegrees() - 59) <= 35) {
-                    moveArmTo("Close", intakeArmServoController);
+                    moveServoArmTo("Close", intakeArm);
                 }
             } else {
-                moveWristTo("Close", wristServoController);
+                moveWristTo("Open", wristServoController);
                 if (Math.abs(wristServoController.getCurrentPositionInDegrees() - 9.16) <= 9.16) {
-                    moveArmTo("Close", intakeArmServoController);
+                    if (!grabbing) {
+                        moveServoArmTo("Open", intakeArm);
+                    } else {
+                        moveServoArmTo("Grab", intakeArm);
+                    }
                 }
             }
             if (gamepad2.a && (!intakeDebounce)) {
@@ -328,10 +350,15 @@ public class rebindedTeleopV2 extends LinearOpMode {
                 case "Grab":
                     if (gamepad2.x && (!intakeClawDebounce)) {
                         intakeClawDebounce = true;
+                        if (intakeClawState) {
+                            intakeClawState = false;
+                        } else {
+                            grabTimer = runtime.seconds();
+                            grabbing = true;
+                        }
                         // If "x" pressed while grabbing, jab down and grab. Otherwise allow open and close
-                        intakeClawState = !intakeClawState;
-                        break;
                     }
+                    break;
                 case "Transfer Ready":
                     // Do not allow opening. Keep it closed.
                     intakeClawState = true;
@@ -348,6 +375,11 @@ public class rebindedTeleopV2 extends LinearOpMode {
             if (!gamepad2.x && intakeClawDebounce) {
                 intakeClawDebounce = false;
             }
+            if (runtime.seconds() > grabTimer + 0.15 && grabbing) {
+                intakeClawState = true;
+                grabbing = false;
+            }
+
 
 
             // LOCK THE OUT DRIVE!
@@ -374,11 +406,7 @@ public class rebindedTeleopV2 extends LinearOpMode {
 
 
 
-            if (deposClawState) {
-                deposClaw.setPosition(0.8); // Closed
-            } else {
-                deposClaw.setPosition(0.3); // Open
-            }
+            if (deposClawState) { deposClaw.setPosition(0.8); } else { deposClaw.setPosition(0.3); }
             if (gamepad2.y && (!deposClawDebounce)) {
                 deposClawDebounce = true;
                 deposClawState = !deposClawState;
@@ -407,23 +435,6 @@ public class rebindedTeleopV2 extends LinearOpMode {
             }
 
 
-/*
-            if (gamepad2.b && (!intakeArmDebounce)) {
-                intakeArmDebounce = true;
-                if (intakeArmState) {
-                    // Rotate the Arm In
-                    intakeArmState = false;
-                    //intakeArmServoController.runToPosition(76, false);
-                } else {
-                    // Rotate the Arm Out
-                    intakeArmState = true;
-                    //intakeArmServoController.runToPosition(50, true);
-                }
-            }
-            if (!gamepad2.b && intakeArmDebounce) {
-                intakeArmDebounce = false;
-            }
-*/
 
             // Vertical Lift Motor Controls
             if (gamepad2.dpad_up) {
@@ -433,6 +444,7 @@ public class rebindedTeleopV2 extends LinearOpMode {
             } else {
                 upDrivePower = 0;
             }
+
 
 
             // Horizontal "Lift" Motor Controls
@@ -445,11 +457,13 @@ public class rebindedTeleopV2 extends LinearOpMode {
             }
 
 
+
             if (gamepad1.left_bumper) {
                 speedMultiplier = 0.25;
             } else if (gamepad1.right_bumper) {
                 speedMultiplier = 1;
             }
+
 
 
             if ((horizontalDrive.getCurrentPosition() < -10) && (!gamepad2.dpad_right) && (!horizontalDriveLockState)) {
@@ -467,14 +481,17 @@ public class rebindedTeleopV2 extends LinearOpMode {
             }
 
 
+
             // Send calculated power to wheels
             leftFrontDrive.setPower(leftFrontPower * speedMultiplier);
             rightFrontDrive.setPower(rightFrontPower * speedMultiplier);
             leftBackDrive.setPower(leftBackPower * speedMultiplier);
             rightBackDrive.setPower(rightBackPower * speedMultiplier);
-            verticalRight.setPower(upDrivePower);
-            verticalLeft.setPower(-upDrivePower);
-            horizontalDrive.setPower(outDrivePower);
+            if (!gamepad2.b) {
+                verticalRight.setPower(upDrivePower);
+                verticalLeft.setPower(-upDrivePower);
+                horizontalDrive.setPower(outDrivePower);
+            }
 
             int upDrivePos1 = verticalRight.getCurrentPosition();
             int upDrivePos2 = verticalLeft.getCurrentPosition();
@@ -493,7 +510,7 @@ public class rebindedTeleopV2 extends LinearOpMode {
 
             telemetry.addData(" ", " ");
             telemetry.addData("Wrist Servo Encoder: ", (wristServoController.getCurrentPositionInDegrees()));
-            telemetry.addData("Arm Servo Encoder: ", (intakeArmServoController.getCurrentPositionInDegrees()));
+            telemetry.addData("Arm Servo: ", (intakeArm.getPosition()));
             telemetry.addData("Depos Servo Encoder: ", (deposLeftController.getCurrentPositionInDegrees()));
 
             telemetry.update();
@@ -501,6 +518,7 @@ public class rebindedTeleopV2 extends LinearOpMode {
     }
 
 
+    /*
     // Move intake arm to "Open" or "Close"
     public void moveArmTo(String state, ContinuousServoController intakeArmServoController) {
         switch (state) {
@@ -519,14 +537,27 @@ public class rebindedTeleopV2 extends LinearOpMode {
                 }
                 break;
             case "Grab": // Equal to grab position
-                if (intakeArmServoController.getCurrentPositionInDegrees() > 51) {
-                    intakeArmServoController.runToPosition(51, true, 1);
+                if (intakeArmServoController.getCurrentPositionInDegrees() > 46.5) {
+                    intakeArmServoController.runToPosition(46.5, true, 1);
                 } else {
-                    intakeArmServoController.runToPosition(51, false, 1);
+                    intakeArmServoController.runToPosition(46.5, false, 1);
                 }
                 break;
         }
     }
+     */
+
+    public void moveServoArmTo(String state, Servo arm) {
+        switch (state) {
+            case "Open": // Equal to grab position
+                arm.setPosition(0.7);
+            case "Close": // Equal to transfer position
+                arm.setPosition(0);
+            case "Grab": // Equal to grab position
+                arm.setPosition(0.85);
+        }
+    }
+
     // Move intake wrist to "Open" or "Close"
     public void moveWristTo(String state, ContinuousServoController wristServoController) {
         switch (state) {
@@ -538,10 +569,10 @@ public class rebindedTeleopV2 extends LinearOpMode {
                 }
                 break;
             case "Close": // Equal to transfer position
-                if (wristServoController.getCurrentPositionInDegrees() < 60) {
-                    wristServoController.runToPosition(60, true, 2.5);
+                if (wristServoController.getCurrentPositionInDegrees() < 60.5) {
+                    wristServoController.runToPosition(60.5, true, 2.25);
                 } else {
-                    wristServoController.runToPosition(60, false, 2.5);
+                    wristServoController.runToPosition(60.5, false, 2.25);
                 }
                 break;
         }
@@ -550,23 +581,23 @@ public class rebindedTeleopV2 extends LinearOpMode {
     // Check if horizontal slides are all the way in
     public Boolean extendoClosed() { return (horizontalDrive.getCurrentPosition() < 25); }
     // Check if lift is all the way down
-    public Boolean liftDown() { return (verticalRight.getCurrentPosition() < 10); }
+    public Boolean liftDown() { return (verticalRight.getCurrentPosition() < 25); }
     // Check if wrist and arm are back and claw is rotated in transfer position
-    public Boolean intakeInTransferPosition(ContinuousServoController controllerArm, ContinuousServoController controllerWrist) { return (Math.abs(controllerArm.getCurrentPositionInDegrees() - 77.7) < 5 && Math.abs(controllerWrist.getCurrentPositionInDegrees() - 60) < 5); }
+    public Boolean intakeInTransferPosition(ContinuousServoController controllerWrist) { return (Math.abs(controllerWrist.getCurrentPositionInDegrees() - 60.5) < 5); }
     // Check if the depos arm is down
     public Boolean deposArmDown(ContinuousServoController controllerDepos) { return (Math.abs(controllerDepos.getCurrentPositionInDegrees() - 14) < 3); }
     // Check if the depos claw is closed
     public Boolean deposClawClosed() { return deposClawState; }
 
     // Get the state of the robot based on other values; can be overridden by certain controls
-    public String getRobotState(ContinuousServoController controllerArm, ContinuousServoController controllerWrist, ContinuousServoController controllerDepos) {
-        if (extendoClosed() && liftDown() && deposArmDown(controllerDepos) && intakeInTransferPosition(controllerArm, controllerWrist) && !deposClawClosed()) {
+    public String getRobotState(ContinuousServoController controllerWrist, ContinuousServoController controllerDepos) {
+        if (extendoClosed() && liftDown() && deposArmDown(controllerDepos) && intakeInTransferPosition(controllerWrist) && !deposClawClosed()) {
             // If everything retracted and depos claw open, basically starting position
             return "Transfer Ready";
-        } else if (extendoClosed() && liftDown() && deposArmDown(controllerDepos) && intakeInTransferPosition(controllerArm, controllerWrist) && deposClawClosed()) {
+        } else if (extendoClosed() && liftDown() && deposArmDown(controllerDepos) && intakeInTransferPosition(controllerWrist) && deposClawClosed()) {
             // If everything retracted and depos claw closed, basically starting position
             return "Transfer Complete";
-        } else if (!extendoClosed() && !intakeInTransferPosition(controllerArm, controllerWrist)) {
+        } else if (!extendoClosed() || !intakeInTransferPosition(controllerWrist)) {
             // If extendo not in and arm/wrist not retracted
             return "Grab";
         } else if (!liftDown() || !deposArmDown(controllerDepos)) {

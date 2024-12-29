@@ -17,27 +17,37 @@ public class encoderTest extends LinearOpMode {
     private AnalogInput signalA; // First wire
     private AnalogInput signalB; // Second wire
     private DigitalChannel limitSwitch;
-    private CRServo intakeArm =  null; // Servo that rotates the claw up down
+    private Servo intakeArm =  null; // Servo that rotates the claw up down
+    boolean state = false;
+    boolean stateDebounce = false;
 
     @Override
     public void runOpMode() {
-        intakeArm = hardwareMap.get(CRServo.class, "deposLeft"); // Exp. Hub P3
+        intakeArm = hardwareMap.get(Servo.class, "intakeArm"); // Exp. Hub P3
         signalA = hardwareMap.get(AnalogInput.class, "depositEncoder1");
         signalB = hardwareMap.get(AnalogInput.class, "depositEncoder2");
         limitSwitch = hardwareMap.get(DigitalChannel.class, "magLimVertical1"); // 'magLimVert1' is the name in the config file
+
+        state = false;
+        stateDebounce = false;
+
         waitForStart();
 
-        ContinuousServoController controller = new ContinuousServoController(intakeArm, signalA);
 
         while (opModeIsActive()) {
-            boolean limitSwitchState = limitSwitch.getState();
-            if (!limitSwitchState) {
-                telemetry.addData("Limit Switch", "Triggered");
+            if (gamepad2.a && !stateDebounce) {
+                state = !state;
+            }
+            if (stateDebounce && !gamepad2.a) {
+                stateDebounce = false;
+            }
+            if (state) {
+                intakeArm.setPosition(0);
             } else {
-                telemetry.addData("Limit Switch", "Not Triggered");
+                intakeArm.setPosition(0.7);
             }
 
-            telemetry.addData("Depos Arm Encoder in Degrees", controller.getCurrentPositionInDegrees());
+            telemetry.addData("Depos Arm Encoder in Degrees", (signalA.getVoltage() / signalA.getMaxVoltage()) * 360.0);
 
             telemetry.update();
         }
