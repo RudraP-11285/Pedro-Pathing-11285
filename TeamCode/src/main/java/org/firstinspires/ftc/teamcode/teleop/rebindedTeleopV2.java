@@ -207,6 +207,8 @@ public class rebindedTeleopV2 extends LinearOpMode {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
 
+        intakeArm.setPosition(0);
+
         waitForStart();
         runtime.reset();
 
@@ -268,7 +270,6 @@ public class rebindedTeleopV2 extends LinearOpMode {
                 intakeRotateState = false;
                 intakeClawState = true;
                 deposArmState = false;
-                deposClawState = false;
 
 
                 if ((horizontalDrive.getCurrentPosition() > 300 && verticalRight.getCurrentPosition() > 25) || (horizontalDrive.getCurrentPosition() > 10 && verticalRight.getCurrentPosition() < 25))  {
@@ -283,6 +284,7 @@ public class rebindedTeleopV2 extends LinearOpMode {
                 } else {
                     verticalLeft.setPower(0);
                     verticalRight.setPower(0);
+                    deposClawState = false;
                 }
             }
 
@@ -291,7 +293,7 @@ public class rebindedTeleopV2 extends LinearOpMode {
             // NOTE: All code below controls the intake
             if (intakeState) {
                 moveWristTo("Close", wristServoController);
-                if (Math.abs(wristServoController.getCurrentPositionInDegrees() - 59) <= 35) {
+                if (Math.abs(wristServoController.getCurrentPositionInDegrees() - 59) <= 10) {
                     moveServoArmTo("Close", intakeArm);
                 }
             } else {
@@ -354,6 +356,7 @@ public class rebindedTeleopV2 extends LinearOpMode {
                             intakeClawState = false;
                         } else {
                             grabTimer = runtime.seconds();
+                            intakeClawState = true;
                             grabbing = true;
                         }
                         // If "x" pressed while grabbing, jab down and grab. Otherwise allow open and close
@@ -375,8 +378,7 @@ public class rebindedTeleopV2 extends LinearOpMode {
             if (!gamepad2.x && intakeClawDebounce) {
                 intakeClawDebounce = false;
             }
-            if (runtime.seconds() > grabTimer + 0.15 && grabbing) {
-                intakeClawState = true;
+            if (runtime.seconds() > grabTimer + 0.1 && grabbing) {
                 grabbing = false;
             }
 
@@ -407,9 +409,23 @@ public class rebindedTeleopV2 extends LinearOpMode {
 
 
             if (deposClawState) { deposClaw.setPosition(0.8); } else { deposClaw.setPosition(0.3); }
-            if (gamepad2.y && (!deposClawDebounce)) {
-                deposClawDebounce = true;
-                deposClawState = !deposClawState;
+            switch (robotState) {
+                case "Depos":
+                    if (deposArmDown(deposLeftController)) {
+                        deposClawState = true;
+                    } else {
+                        if (gamepad2.y && (!deposClawDebounce)) {
+                            deposClawDebounce = true;
+                            deposClawState = !deposClawState;
+                        }
+                    }
+                    break;
+                default:
+                    if (gamepad2.y && (!deposClawDebounce)) {
+                        deposClawDebounce = true;
+                        deposClawState = !deposClawState;
+                    }
+                    break;
             }
             if (!gamepad2.y && deposClawDebounce) {
                 deposClawDebounce = false;
@@ -483,6 +499,8 @@ public class rebindedTeleopV2 extends LinearOpMode {
 
 
             // Send calculated power to wheels
+            outDrivePower += (gamepad2.right_trigger - gamepad2.left_trigger);
+
             leftFrontDrive.setPower(leftFrontPower * speedMultiplier);
             rightFrontDrive.setPower(rightFrontPower * speedMultiplier);
             leftBackDrive.setPower(leftBackPower * speedMultiplier);
@@ -550,11 +568,14 @@ public class rebindedTeleopV2 extends LinearOpMode {
     public void moveServoArmTo(String state, Servo arm) {
         switch (state) {
             case "Open": // Equal to grab position
-                arm.setPosition(0.7);
+                arm.setPosition(0.55);
+                break;
             case "Close": // Equal to transfer position
                 arm.setPosition(0);
+                break;
             case "Grab": // Equal to grab position
-                arm.setPosition(0.85);
+                arm.setPosition(0.7);
+                break;
         }
     }
 

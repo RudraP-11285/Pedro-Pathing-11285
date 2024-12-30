@@ -18,17 +18,17 @@ public class encoderTest extends LinearOpMode {
     private AnalogInput signalB; // Second wire
     private DigitalChannel limitSwitch;
     private Servo intakeArm =  null; // Servo that rotates the claw up down
-    boolean state = false;
+    int state = 0;
     boolean stateDebounce = false;
 
     @Override
     public void runOpMode() {
         intakeArm = hardwareMap.get(Servo.class, "intakeArm"); // Exp. Hub P3
-        signalA = hardwareMap.get(AnalogInput.class, "depositEncoder1");
-        signalB = hardwareMap.get(AnalogInput.class, "depositEncoder2");
+        signalA = hardwareMap.get(AnalogInput.class, "armEncoder1");
+        signalB = hardwareMap.get(AnalogInput.class, "armEncoder2");
         limitSwitch = hardwareMap.get(DigitalChannel.class, "magLimVertical1"); // 'magLimVert1' is the name in the config file
 
-        state = false;
+        state = 0;
         stateDebounce = false;
 
         waitForStart();
@@ -36,18 +36,31 @@ public class encoderTest extends LinearOpMode {
 
         while (opModeIsActive()) {
             if (gamepad2.a && !stateDebounce) {
-                state = !state;
+                state += 1;
+                state %= 3;
+                stateDebounce = true;
             }
             if (stateDebounce && !gamepad2.a) {
                 stateDebounce = false;
             }
-            if (state) {
-                intakeArm.setPosition(0);
-            } else {
-                intakeArm.setPosition(0.7);
+            switch (state) {
+                case 0:
+                    intakeArm.setPosition(0);
+                    break;
+                case 1:
+                    intakeArm.setPosition(0.55);
+                    break;
+                case 2:
+                    intakeArm.setPosition(0.7);
+                    break;
+                default:
+                    intakeArm.setPosition(0);
+                    break;
             }
 
-            telemetry.addData("Depos Arm Encoder in Degrees", (signalA.getVoltage() / signalA.getMaxVoltage()) * 360.0);
+
+            telemetry.addData("Depos Arm Encoder in Degrees:", (signalA.getVoltage() / signalA.getMaxVoltage()) * 360.0);
+            telemetry.addData("State:", state);
 
             telemetry.update();
         }
