@@ -236,7 +236,7 @@ public class rebindedTeleopV2 extends LinearOpMode {
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
             double axial   = axialBoost - gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
             double lateral =  gamepad1.left_stick_x + lateralBoost;
-            double yaw     =  gamepad1.right_stick_x;
+            double yaw     =  gamepad1.right_stick_x + (gamepad1.right_trigger - gamepad1.left_trigger);
 
             // Combine the joystick requests for each axis-motion to determine each wheel's power.
             // Set up a variable for each drive wheel to save the power level for telemetry.
@@ -272,7 +272,7 @@ public class rebindedTeleopV2 extends LinearOpMode {
                 deposArmState = false;
 
 
-                if ((horizontalDrive.getCurrentPosition() > 300 && verticalRight.getCurrentPosition() > 25) || (horizontalDrive.getCurrentPosition() > 10 && verticalRight.getCurrentPosition() < 25))  {
+                if ((horizontalDrive.getCurrentPosition() > 350 && verticalRight.getCurrentPosition() > 25) || (horizontalDrive.getCurrentPosition() > 10 && verticalRight.getCurrentPosition() < 25))  {
                     horizontalDrive.setPower(-1);
                 } else {
                     horizontalDrive.setPower(0);
