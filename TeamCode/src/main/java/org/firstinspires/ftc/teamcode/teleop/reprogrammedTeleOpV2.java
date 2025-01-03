@@ -68,8 +68,8 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Rebinded Into the Deep: V2 TeleOp", group="TeleOp")
-public class rebindedTeleopV2 extends LinearOpMode {
+@TeleOp(name="Reprogrammed Wrist 1 Into the Deep: V2 TeleOp", group="TeleOp")
+public class reprogrammedTeleOpV2 extends LinearOpMode {
 
     // Declare OpMode members for each of the 4 drive motors and 3 horizontal/vertical lift motors
     private ElapsedTime runtime = new ElapsedTime();
@@ -85,7 +85,7 @@ public class rebindedTeleopV2 extends LinearOpMode {
     private Servo intakeArm =  null; // Edward
     private Servo intakeClaw =  null; // Servo that opens and closes intake claw
     private Servo intakeRotate =  null; // Servo that rotates the claw left right
-    private CRServo intakeWrist =  null; // Servo that rotates the claw up down
+    private Servo intakeWrist =  null; // Servo that rotates the claw up down
 
     // All 3 of the Outtake Servos plugged into Control Hub
     private Servo deposClaw =  null; // Edward
@@ -150,7 +150,7 @@ public class rebindedTeleopV2 extends LinearOpMode {
 
         // All 4 input servos
         intakeClaw = hardwareMap.get(Servo.class, "intakeClaw"); // Exp. Hub P4
-        intakeWrist = hardwareMap.get(CRServo.class, "intakeWrist"); // Exp. Hub P3
+        intakeWrist = hardwareMap.get(Servo.class, "intakeWrist"); // Exp. Hub P3
         intakeRotate = hardwareMap.get(Servo.class, "intakeRotate"); // Exp. Hub P2
         intakeArm = hardwareMap.get(Servo.class, "intakeArm"); // Exp. Hub P1
 
@@ -179,7 +179,7 @@ public class rebindedTeleopV2 extends LinearOpMode {
 
         ContinuousServoController deposLeftController = new ContinuousServoController(deposLeft, depositEncoder1);
         ContinuousServoController deposRightController = new ContinuousServoController(deposRight, depositEncoder1);
-        ContinuousServoController wristServoController = new ContinuousServoController(intakeWrist, wristEncoder1);
+        ContinuousServoController wristServoController = new ContinuousServoController(deposLeft, wristEncoder1);
         //ContinuousServoController intakeArmServoController = new ContinuousServoController(intakeArm, armEncoder1);
 
 
@@ -299,21 +299,21 @@ public class rebindedTeleopV2 extends LinearOpMode {
 
             // NOTE: All code below controls the intake
             if (intakeState) {
-                moveWristTo("Close", wristServoController);
+                moveWristTo("Close", intakeWrist);
                 if (Math.abs(wristServoController.getCurrentPositionInDegrees() - 59) <= 10) {
                     if (intakeWaitToReturn) {
-                        moveServoArmTo("Wait", intakeArm);
+                        moveArmTo("Wait", intakeArm);
                     } else {
-                        moveServoArmTo("Close", intakeArm);
+                        moveArmTo("Close", intakeArm);
                     }
                 }
             } else {
-                moveWristTo("Open", wristServoController);
+                moveWristTo("Open", intakeWrist);
                 if (Math.abs(wristServoController.getCurrentPositionInDegrees() - 9.16) <= 9.16) {
                     if (!grabbing) {
-                        moveServoArmTo("Open", intakeArm);
+                        moveArmTo("Open", intakeArm);
                     } else {
-                        moveServoArmTo("Grab", intakeArm);
+                        moveArmTo("Grab", intakeArm);
                     }
                 }
             }
@@ -384,7 +384,7 @@ public class rebindedTeleopV2 extends LinearOpMode {
                         intakeClawState = !intakeClawState;
                     }
                     break;
-                }
+            }
             // Reset debounce once key up
             if (!gamepad2.x && intakeClawDebounce) {
                 intakeClawDebounce = false;
@@ -580,7 +580,7 @@ public class rebindedTeleopV2 extends LinearOpMode {
     }
      */
 
-    public void moveServoArmTo(String state, Servo arm) {
+    public void moveArmTo(String state, Servo arm) {
         switch (state) {
             case "Open": // Equal to grab position
                 arm.setPosition(0.55);
@@ -598,21 +598,13 @@ public class rebindedTeleopV2 extends LinearOpMode {
     }
 
     // Move intake wrist to "Open" or "Close"
-    public void moveWristTo(String state, ContinuousServoController wristServoController) {
+    public void moveWristTo(String state, Servo wrist) {
         switch (state) {
             case "Open": // Equal to grab position
-                if (wristServoController.getCurrentPositionInDegrees() > 9.16) {
-                    wristServoController.runToPosition(9.16, false, 1);
-                } else {
-                    wristServoController.runToPosition(9.16, true, 1);
-                }
+                wrist.setPosition(1);
                 break;
             case "Close": // Equal to transfer position
-                if (wristServoController.getCurrentPositionInDegrees() < 60.5) {
-                    wristServoController.runToPosition(60.5, true, 2.25);
-                } else {
-                    wristServoController.runToPosition(60.5, false, 2.25);
-                }
+                wrist.setPosition(0);
                 break;
         }
     }
