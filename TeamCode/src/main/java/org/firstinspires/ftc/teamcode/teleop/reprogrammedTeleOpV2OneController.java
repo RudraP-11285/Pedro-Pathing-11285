@@ -515,15 +515,6 @@ public class reprogrammedTeleOpV2OneController extends LinearOpMode {
             if (!gamepad1.left_bumper && deposArmDebounce) {
                 deposArmDebounce = false;
             }
-            if (deposArmState) { // 92 drop limit, 80 (73) specimen limit
-                if (deposLeftController.getCurrentPositionInDegrees() < 92 && deposLeftController.getCurrentPositionInDegrees() > 30) {
-                    deposLeftController.runToPosition(92, false, 10);
-                } else {
-                    deposLeftController.runToPosition(92, true, 10);
-                }
-            } else {
-                deposLeftController.runToPosition(14, false, 1);
-            }
 
 
 
