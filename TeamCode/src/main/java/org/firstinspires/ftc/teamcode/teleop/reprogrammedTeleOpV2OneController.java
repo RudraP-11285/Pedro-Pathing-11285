@@ -67,6 +67,43 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
+/*
+--------------------------------------------CONTROLS------------------------------------------------------
+a: Intake Arm Toggle
+b: Transfer Position
+x: Intake Claw Toggle
+y: Depos Claw Toggle
+
+dpLeft: Slide Back
+dpRight: Slide Forward
+dpUp: Lift Up
+dpDown: Lift Down
+
+lStickX: Strafe (Side-Side)
+lStickY: Forward/Back
+lStickPress:
+
+rStickX: Turn
+rStickY: Slide Precision
+rStickPress:
+
+lTrigger: Turn Precision
+rTrigger: Turn Precision
+
+lBumper: Depos Arm Toggle
+rBumper: Intake Wrist Rotate
+
+Back: Lock Slides
+
+Start Combos-------------------------
+
+Start+dpLeft: Side-Side Precision
+Start+dpUp: Forward/Back Precision
+Start+dpRight: Side-Side Precision
+Start+dpDown: Forward/Back Precision
+
+*/
+
 @TeleOp(name="One Controller", group="TeleOp")
 public class reprogrammedTeleOpV2OneController extends LinearOpMode {
 
@@ -88,8 +125,8 @@ public class reprogrammedTeleOpV2OneController extends LinearOpMode {
 
     // All 3 of the Outtake Servos plugged into Control Hub
     private Servo deposClaw =  null; // Edward
-    private CRServo deposLeft =  null; // Stuart
-    private CRServo deposRight =  null; // Felicia
+    private Servo deposLeft =  null; // Stuart
+    private Servo deposRight =  null; // Felicia
 
     private AnalogInput depositEncoder1 = null;
     private AnalogInput depositEncoder2 = null;
@@ -159,8 +196,8 @@ public class reprogrammedTeleOpV2OneController extends LinearOpMode {
 
         // All 3 output servos
         deposClaw = hardwareMap.get(Servo.class, "deposClaw");
-        deposLeft = hardwareMap.get(CRServo.class, "deposLeft");
-        deposRight = hardwareMap.get(CRServo.class, "deposRight");
+        deposLeft = hardwareMap.get(Servo.class, "deposLeft");
+        deposRight = hardwareMap.get(Servo.class, "deposRight");
 
         // All 3 special servo encoders
         depositEncoder1 = hardwareMap.get(AnalogInput.class, "depositEncoder1");
@@ -179,10 +216,10 @@ public class reprogrammedTeleOpV2OneController extends LinearOpMode {
         // The singular distance sensor we have. Yay.
         backDistance = hardwareMap.get(DistanceSensor.class, "backDistance");
 
-
-        ContinuousServoController deposLeftController = new ContinuousServoController(deposLeft, depositEncoder1);
-        ContinuousServoController deposRightController = new ContinuousServoController(deposRight, depositEncoder1);
-        ContinuousServoController wristServoController = new ContinuousServoController(deposLeft, wristEncoder1);
+        CRServo dummy = null;
+        ContinuousServoController deposLeftController = new ContinuousServoController(dummy, depositEncoder1);
+        ContinuousServoController deposRightController = new ContinuousServoController(dummy, depositEncoder1);
+        ContinuousServoController wristServoController = new ContinuousServoController(dummy, wristEncoder1);
         //ContinuousServoController intakeArmServoController = new ContinuousServoController(intakeArm, armEncoder1);
 
 
@@ -231,9 +268,9 @@ public class reprogrammedTeleOpV2OneController extends LinearOpMode {
                 }
 
                 if (gamepad1.dpad_down) {
-                    axialBoost = 0.25;
-                } else if (gamepad1.dpad_up) {
                     axialBoost = -0.25;
+                } else if (gamepad1.dpad_up) {
+                    axialBoost = 0.25;
                 }
             }
 
