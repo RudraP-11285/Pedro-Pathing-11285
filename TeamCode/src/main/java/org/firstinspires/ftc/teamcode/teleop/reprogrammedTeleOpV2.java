@@ -68,7 +68,7 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Into the Deep - V2 TeleOp", group="TeleOp")
+@TeleOp(name="! Into the Deep - V2 TeleOp", group="TeleOp")
 public class reprogrammedTeleOpV2 extends LinearOpMode {
 
     // Declare OpMode members for each of the 4 drive motors and 3 horizontal/vertical lift motors
@@ -175,6 +175,8 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
 
         // The singular distance sensor we have. Yay.
         backDistance = hardwareMap.get(DistanceSensor.class, "backDistance");
+        magLimVertical1.setMode(DigitalChannel.Mode.INPUT);
+        magLimHorizontal1.setMode(DigitalChannel.Mode.INPUT);
 
 
         CRServo dummy = null;
@@ -217,6 +219,8 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
+            boolean magHorOn = !magLimHorizontal1.getState(); // Usually, "false" means pressed
+            boolean magVertOn = !magLimVertical1.getState(); // Usually, "false" means pressed
             robotState = getRobotState(wristServoController, deposLeftController);
 
             double lateralBoost = 0;
@@ -282,11 +286,13 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
                 }
 
                 if (verticalRight.getCurrentPosition() > 5) {
-                    verticalLeft.setPower(1);
-                    verticalRight.setPower(-1);
+                    upDrivePower = -1;
+                    //verticalLeft.setPower(1);
+                    //verticalRight.setPower(-1);
                 } else {
-                    verticalLeft.setPower(0);
-                    verticalRight.setPower(0);
+                    upDrivePower = 0;
+                    //verticalLeft.setPower(0);
+                    //verticalRight.setPower(0);
                 }
 
                 if (verticalRight.getCurrentPosition() < 200) {
@@ -532,6 +538,10 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
                 outDrivePower += (gamepad2.right_trigger);
             }
 
+            if (magVertOn && (upDrivePower < 0)) { // Negate downward movement if limit is active
+                upDrivePower = 0;
+            }
+
             leftFrontDrive.setPower(leftFrontPower * speedMultiplier);
             rightFrontDrive.setPower(rightFrontPower * speedMultiplier);
             leftBackDrive.setPower(leftBackPower * speedMultiplier);
@@ -633,8 +643,8 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
                 right.setPosition(0);
                 break;
             case "Depos": // Equal to transfer position
-                left.setPosition(0.6);
-                right.setPosition(0.4);
+                left.setPosition(0.61);
+                right.setPosition(0.39);
                 break;
             case "Specimen":
                 left.setPosition(0.3);

@@ -18,6 +18,7 @@ public class encoderTest extends LinearOpMode {
     private AnalogInput signalB; // Second wire
     private DigitalChannel limitSwitch;
     private Servo intakeArm =  null; // Servo that rotates the claw up down
+    private DcMotor verticalDrive = null;
     int state = 0;
     boolean stateDebounce = false;
 
@@ -26,7 +27,9 @@ public class encoderTest extends LinearOpMode {
         intakeArm = hardwareMap.get(Servo.class, "intakeArm"); // Exp. Hub P3
         signalA = hardwareMap.get(AnalogInput.class, "armEncoder1");
         signalB = hardwareMap.get(AnalogInput.class, "armEncoder2");
-        limitSwitch = hardwareMap.get(DigitalChannel.class, "magLimVertical1"); // 'magLimVert1' is the name in the config file
+        verticalDrive = hardwareMap.get(DcMotor.class, "horizontalDrive");
+        limitSwitch = hardwareMap.get(DigitalChannel.class, "magLimHorizontal1"); // 'magLimVert1' is the name in the config file
+        limitSwitch.setMode(DigitalChannel.Mode.INPUT);
 
         state = 0;
         stateDebounce = false;
@@ -58,7 +61,11 @@ public class encoderTest extends LinearOpMode {
                     break;
             }
 
+            boolean isPressed = !limitSwitch.getState(); // Usually, "false" means pressed
 
+            // Display the state on the telemetry
+            telemetry.addData("Limit Switch Pressed", isPressed);
+            telemetry.addData("Horizontal Drive Position: ", verticalDrive.getCurrentPosition());
             telemetry.addData("Depos Arm Encoder in Degrees:", (signalA.getVoltage() / signalA.getMaxVoltage()) * 360.0);
             telemetry.addData("State:", state);
 
