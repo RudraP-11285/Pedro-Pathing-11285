@@ -68,7 +68,7 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Reprogrammed Wrist 1 Into the Deep: V2 TeleOp", group="TeleOp")
+@TeleOp(name="Into the Deep - V2 TeleOp", group="TeleOp")
 public class reprogrammedTeleOpV2 extends LinearOpMode {
 
     // Declare OpMode members for each of the 4 drive motors and 3 horizontal/vertical lift motors
@@ -89,8 +89,8 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
 
     // All 3 of the Outtake Servos plugged into Control Hub
     private Servo deposClaw =  null; // Edward
-    private CRServo deposLeft =  null; // Stuart
-    private CRServo deposRight =  null; // Felicia
+    private Servo deposLeft =  null; // Stuart
+    private Servo deposRight =  null; // Felicia
 
     private AnalogInput depositEncoder1 = null;
     private AnalogInput depositEncoder2 = null;
@@ -156,8 +156,8 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
 
         // All 3 output servos
         deposClaw = hardwareMap.get(Servo.class, "deposClaw");
-        deposLeft = hardwareMap.get(CRServo.class, "deposLeft");
-        deposRight = hardwareMap.get(CRServo.class, "deposRight");
+        deposLeft = hardwareMap.get(Servo.class, "deposLeft");
+        deposRight = hardwareMap.get(Servo.class, "deposRight");
 
         // All 3 special servo encoders
         depositEncoder1 = hardwareMap.get(AnalogInput.class, "depositEncoder1");
@@ -177,13 +177,15 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
         backDistance = hardwareMap.get(DistanceSensor.class, "backDistance");
 
 
-        ContinuousServoController deposLeftController = new ContinuousServoController(deposLeft, depositEncoder1);
-        ContinuousServoController deposRightController = new ContinuousServoController(deposRight, depositEncoder1);
-        ContinuousServoController wristServoController = new ContinuousServoController(deposLeft, wristEncoder1);
+        CRServo dummy = null;
+        ContinuousServoController deposLeftController = new ContinuousServoController(dummy, depositEncoder1);
+        ContinuousServoController deposRightController = new ContinuousServoController(dummy, depositEncoder1);
+        ContinuousServoController wristServoController = new ContinuousServoController(dummy, wristEncoder1);
         //ContinuousServoController intakeArmServoController = new ContinuousServoController(intakeArm, armEncoder1);
 
 
         String robotState = "Transfer";
+        String scoreState = "Sample";
 
 
         // ########################################################################################
@@ -225,9 +227,9 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
             }
             double axialBoost = 0;
             if (gamepad1.dpad_down) {
-                axialBoost = 0.25;
-            } else if (gamepad1.dpad_up) {
                 axialBoost = -0.25;
+            } else if (gamepad1.dpad_up) {
+                axialBoost = 0.25;
             }
 
 
@@ -448,17 +450,31 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
                 deposArmDebounce = true;
                 deposArmState = !deposArmState;
             }
-            if (!gamepad2.left_bumper && deposArmDebounce) {
+            if (!(gamepad2.left_bumper || gamepad1.y || gamepad2.left_stick_button) && deposArmDebounce) {
                 deposArmDebounce = false;
             }
-            if (deposArmState) { // 92 drop limit, 80 (73) specimen limit
-                if (deposLeftController.getCurrentPositionInDegrees() < 92 && deposLeftController.getCurrentPositionInDegrees() > 30) {
-                    deposLeftController.runToPosition(92, false, 10);
-                } else {
-                    deposLeftController.runToPosition(92, true, 10);
+            if (deposArmState) {
+                switch (scoreState) {
+                    case "Sample":
+                        moveDeposTo("Depos", deposLeft, deposRight);
+                        break;
+                    case "Specimen":
+                        moveDeposTo("Specimen", deposLeft, deposRight);
+                        break;
                 }
             } else {
-                deposLeftController.runToPosition(14, false, 1);
+                moveDeposTo("Transfer", deposLeft, deposRight);
+            }
+            if ((gamepad1.y || gamepad2.left_stick_button) && (!deposArmDebounce)) {
+                deposArmDebounce = true;
+                switch (scoreState) {
+                    case "Sample":
+                        scoreState = "Specimen";
+                        break;
+                    case "Specimen":
+                        scoreState = "Sample";
+                        break;
+                }
             }
 
 
@@ -601,10 +617,28 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
     public void moveWristTo(String state, Servo wrist) {
         switch (state) {
             case "Open": // Equal to grab position
-                wrist.setPosition(1);
+                wrist.setPosition(0);
                 break;
             case "Close": // Equal to transfer position
-                wrist.setPosition(0);
+                wrist.setPosition(1);
+                break;
+        }
+    }
+
+
+    public void moveDeposTo(String state, Servo left, Servo right) {
+        switch (state) {
+            case "Transfer": // Equal to grab position
+                left.setPosition(1);
+                right.setPosition(0);
+                break;
+            case "Depos": // Equal to transfer position
+                left.setPosition(0.6);
+                right.setPosition(0.4);
+                break;
+            case "Specimen":
+                left.setPosition(0.3);
+                right.setPosition(0.7);
                 break;
         }
     }
