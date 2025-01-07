@@ -125,8 +125,8 @@ public class reprogrammedTeleOpV2OneController extends LinearOpMode {
 
     // All 3 of the Outtake Servos plugged into Control Hub
     private Servo deposClaw =  null; // Edward
-    private CRServo deposLeft =  null; // Stuart
-    private CRServo deposRight =  null; // Felicia
+    private Servo deposLeft =  null; // Stuart
+    private Servo deposRight =  null; // Felicia
 
     private AnalogInput depositEncoder1 = null;
     private AnalogInput depositEncoder2 = null;
@@ -196,8 +196,8 @@ public class reprogrammedTeleOpV2OneController extends LinearOpMode {
 
         // All 3 output servos
         deposClaw = hardwareMap.get(Servo.class, "deposClaw");
-        deposLeft = hardwareMap.get(CRServo.class, "deposLeft");
-        deposRight = hardwareMap.get(CRServo.class, "deposRight");
+        deposLeft = hardwareMap.get(Servo.class, "deposLeft");
+        deposRight = hardwareMap.get(Servo.class, "deposRight");
 
         // All 3 special servo encoders
         depositEncoder1 = hardwareMap.get(AnalogInput.class, "depositEncoder1");
@@ -216,10 +216,10 @@ public class reprogrammedTeleOpV2OneController extends LinearOpMode {
         // The singular distance sensor we have. Yay.
         backDistance = hardwareMap.get(DistanceSensor.class, "backDistance");
 
-
-        ContinuousServoController deposLeftController = new ContinuousServoController(deposLeft, depositEncoder1);
-        ContinuousServoController deposRightController = new ContinuousServoController(deposRight, depositEncoder1);
-        ContinuousServoController wristServoController = new ContinuousServoController(deposLeft, wristEncoder1);
+        CRServo dummy = null;
+        ContinuousServoController deposLeftController = new ContinuousServoController(dummy, depositEncoder1);
+        ContinuousServoController deposRightController = new ContinuousServoController(dummy, depositEncoder1);
+        ContinuousServoController wristServoController = new ContinuousServoController(dummy, wristEncoder1);
         //ContinuousServoController intakeArmServoController = new ContinuousServoController(intakeArm, armEncoder1);
 
 
