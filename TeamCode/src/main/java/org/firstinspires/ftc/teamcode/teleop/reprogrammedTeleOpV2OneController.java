@@ -67,6 +67,43 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
+/*
+--------------------------------------------CONTROLS------------------------------------------------------
+a: Intake Arm Toggle
+b: Transfer Position
+x: Intake Claw Toggle
+y: Depos Claw Toggle
+
+dpLeft: Slide Back
+dpRight: Slide Forward
+dpUp: Lift Up
+dpDown: Lift Down
+
+lStickX: Strafe (Side-Side)
+lStickY: Forward/Back
+lStickPress:
+
+rStickX: Turn
+rStickY: Slide Precision
+rStickPress:
+
+lTrigger: Turn Precision
+rTrigger: Turn Precision
+
+lBumper: Depos Arm Toggle
+rBumper: Intake Wrist Rotate
+
+Back: Lock Slides
+
+Start Combos-------------------------
+
+Start+dpLeft: Side-Side Precision
+Start+dpUp: Forward/Back Precision
+Start+dpRight: Side-Side Precision
+Start+dpDown: Forward/Back Precision
+
+*/
+
 @TeleOp(name="One Controller", group="TeleOp")
 public class reprogrammedTeleOpV2OneController extends LinearOpMode {
 
@@ -231,9 +268,9 @@ public class reprogrammedTeleOpV2OneController extends LinearOpMode {
                 }
 
                 if (gamepad1.dpad_down) {
-                    axialBoost = 0.25;
-                } else if (gamepad1.dpad_up) {
                     axialBoost = -0.25;
+                } else if (gamepad1.dpad_up) {
+                    axialBoost = 0.25;
                 }
             }
 
