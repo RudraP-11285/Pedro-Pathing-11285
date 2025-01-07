@@ -67,7 +67,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Reprogrammed Wrist 1 Into the Deep: V2 TeleOp", group="TeleOp")
+@TeleOp(name="One Controller", group="TeleOp")
 public class reprogrammedTeleOpV2OneController extends LinearOpMode {
 
     // Declare OpMode members for each of the 4 drive motors and 3 horizontal/vertical lift motors
