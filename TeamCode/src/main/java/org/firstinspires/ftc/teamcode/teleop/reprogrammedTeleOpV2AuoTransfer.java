@@ -138,7 +138,7 @@ public class reprogrammedTeleOpV2AuoTransfer extends LinearOpMode {
 
     public enum TransferStates {
         TRANSFER1(new boolean[]{true,false,true,false,false}),
-        TRANSFFER2(new boolean[]{true,false,true,false,false});
+        TRANSFER2(new boolean[]{true,false,true,false,false});
         private boolean[] servoStates;
         private String[] servos = {"intakeArm","intakeWrist","intakeClaw","deposArm","deposClaw"};
         TransferStates(boolean[] servoStates) {
@@ -306,11 +306,11 @@ public class reprogrammedTeleOpV2AuoTransfer extends LinearOpMode {
                         intakeClawState = transferStates.getStateByIndex(2);
                         deposArmState = transferStates.getStateByIndex(3);
                         deposClawState = transferStates.getStateByIndex(4);
-                        if (intakeInTransferPosition(wristServoController) && deposArmDown(deposRightController) && deposClawClosed()) {
-                            transferStates = TransferStates.TRANSFFER2;
+                        if (intakeInTransferPosition(wristServoController) && deposArmDown(deposRightController) && !deposClawClosed()) {
+                            transferStates = TransferStates.TRANSFER2;
                         }
                         break;
-                    case TRANSFFER2:
+                    case TRANSFER2:
                         intakeState = transferStates.getStateByIndex(0);
                         intakeRotateState = transferStates.getStateByIndex(1);
                         intakeClawState = transferStates.getStateByIndex(2);
