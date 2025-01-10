@@ -313,7 +313,7 @@ public class reprogrammedTeleOpV2AuoTransfer extends LinearOpMode {
                         deposArmState = transferStates.getStateByIndex(3);
                         deposClawState = transferStates.getStateByIndex(4);
                         if (!(intakeInTransferPosition(wristServoController) && deposArmDown(deposRightController) && deposClawClosed())) {
-                            transferStates = TransferStates.TRANSFER1;
+//                            transferStates = TransferStates.TRANSFER1;
                         }
                         break;
                 }
