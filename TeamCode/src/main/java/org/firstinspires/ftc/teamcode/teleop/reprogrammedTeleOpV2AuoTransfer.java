@@ -31,14 +31,13 @@ package org.firstinspires.ftc.teamcode.teleop;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 /*
  * This file contains an example of a Linear "OpMode".
@@ -69,7 +68,7 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
  */
 
 @TeleOp(name="! Into the Deep - V2 TeleOp", group="TeleOp")
-public class reprogrammedTeleOpV2 extends LinearOpMode {
+public class reprogrammedTeleOpV2AuoTransfer extends LinearOpMode {
 
     // Declare OpMode members for each of the 4 drive motors and 3 horizontal/vertical lift motors
     private ElapsedTime runtime = new ElapsedTime();
@@ -133,6 +132,28 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
     Boolean intakeWaitToReturn = false;
     double grabTimer = 0.0;
 
+    public enum TransferStates {
+        TRANSFER1(new boolean[]{true,false,true,false,false}),
+        TRANSFFER2(new boolean[]{true,false,false,false,true});
+        private boolean[] servoStates;
+        private String[] servos = {"intakeArm","intakeWrist","intakeClaw","deposArm","deposClaw"};
+        TransferStates(boolean[] servoStates) {
+            this.servoStates = servoStates;
+        }
+
+        public boolean getStateByName(String servo) {
+            for (int i=0;i<servos.length;i++) {
+                if (servo == servos[i]) {
+                    return servoStates[i];
+                }
+            }
+            return false;
+        }
+        public boolean getStateByIndex(int index) {
+            return servoStates[index];
+        }
+    }
+    TransferStates transferStates = TransferStates.TRANSFER1;
     @Override
     public void runOpMode() {
 
@@ -272,11 +293,34 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
 
 
             // Bring everything back to the transfer position
+            //"intakeArm","intakeWrist","intakeClaw","deposArm","deposClaw"
             if (gamepad2.b) {
-                intakeState = true;
-                intakeRotateState = false;
-                intakeClawState = true;
-                deposArmState = false;
+                switch (transferStates) {
+                    case TRANSFER1:
+                        intakeState = transferStates.getStateByIndex(0);
+                        intakeRotateState = transferStates.getStateByIndex(1);
+                        intakeClawState = transferStates.getStateByIndex(2);
+                        deposArmState = transferStates.getStateByIndex(3);
+                        deposClawState = transferStates.getStateByIndex(4);
+                        if (intakeInTransferPosition(wristServoController) && deposArmDown(deposRightController) && deposClawClosed()) {
+                            transferStates = TransferStates.TRANSFFER2;
+                        }
+                        break;
+                    case TRANSFFER2:
+                        intakeState = transferStates.getStateByIndex(0);
+                        intakeRotateState = transferStates.getStateByIndex(1);
+                        intakeClawState = transferStates.getStateByIndex(2);
+                        deposArmState = transferStates.getStateByIndex(3);
+                        deposClawState = transferStates.getStateByIndex(4);
+                        if (!(intakeInTransferPosition(wristServoController) && deposArmDown(deposRightController) && deposClawClosed())) {
+                            transferStates = TransferStates.TRANSFER1;
+                        }
+                        break;
+                }
+
+
+
+
 
 
                 if ((horizontalDrive.getCurrentPosition() > 350 && verticalRight.getCurrentPosition() > 25) || (horizontalDrive.getCurrentPosition() > 10 && verticalRight.getCurrentPosition() < 25))  {
@@ -307,11 +351,9 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
 
             // NOTE: All code below controls the intake
             if (intakeState) {
-
                 moveWristTo("Close", intakeWrist);
                 if (Math.abs(wristServoController.getCurrentPositionInDegrees() - 59) <= 10) {
                     if (intakeWaitToReturn) {
-                        intakeClawState = true;
                         moveArmTo("Wait", intakeArm);
                     } else {
                         moveArmTo("Close", intakeArm);
@@ -321,7 +363,6 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
                 moveWristTo("Open", intakeWrist);
                 if (Math.abs(wristServoController.getCurrentPositionInDegrees() - 9.16) <= 9.16) {
                     if (!grabbing) {
-                        intakeClawState = false;
                         moveArmTo("Open", intakeArm);
                     } else {
                         moveArmTo("Grab", intakeArm);
@@ -646,8 +687,8 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
                 right.setPosition(0);
                 break;
             case "Depos": // Equal to transfer position
-                left.setPosition(0.65);
-                right.setPosition(0.35);
+                left.setPosition(0.61);
+                right.setPosition(0.39);
                 break;
             case "Specimen":
                 left.setPosition(0.3);
