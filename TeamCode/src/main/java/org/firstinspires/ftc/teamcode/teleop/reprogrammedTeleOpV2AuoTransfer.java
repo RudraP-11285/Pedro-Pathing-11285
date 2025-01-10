@@ -138,7 +138,7 @@ public class reprogrammedTeleOpV2AuoTransfer extends LinearOpMode {
 
     public enum TransferStates {
         TRANSFER1(new boolean[]{true,false,true,false,false}),
-        TRANSFFER2(new boolean[]{true,false,false,false,true});
+        TRANSFFER2(new boolean[]{true,false,true,false,false});
         private boolean[] servoStates;
         private String[] servos = {"intakeArm","intakeWrist","intakeClaw","deposArm","deposClaw"};
         TransferStates(boolean[] servoStates) {
