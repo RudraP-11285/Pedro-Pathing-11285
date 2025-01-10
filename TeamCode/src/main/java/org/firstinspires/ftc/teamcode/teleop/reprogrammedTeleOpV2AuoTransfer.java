@@ -67,7 +67,11 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="!V2 Teleop Improved Transfer", group="TeleOp")
+
+
+
+@TeleOp(name="Auto Transfer TeleOp", group="TeleOp")
+
 public class reprogrammedTeleOpV2AuoTransfer extends LinearOpMode {
 
     // Declare OpMode members for each of the 4 drive motors and 3 horizontal/vertical lift motors

@@ -493,7 +493,7 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
                 upDrivePower = 1;
             } else if (gamepad2.dpad_down) {
                 upDrivePower = -1;
-            } else {
+            } else if (!gamepad2.b) {
                 upDrivePower = 0;
             }
 
@@ -542,6 +542,8 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
             }
 
             if (magVertOn && (upDrivePower < 0)) { // Negate downward movement if limit is active
+                upDrivePower = 0;
+            } else if ((verticalRight.getCurrentPosition() > 3050) && (upDrivePower > 0)) { // Negate upward movement if too high
                 upDrivePower = 0;
             }
 
