@@ -40,6 +40,11 @@ import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.qualcomm.hardware.limelightvision.LLStatus;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+
 /*
  * This file contains an example of a Linear "OpMode".
  * An OpMode is a 'program' that runs in either the autonomous or the teleop period of an FTC match.
@@ -71,6 +76,7 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 @TeleOp(name="! Into the Deep - V2 TeleOp", group="TeleOp")
 public class reprogrammedTeleOpV2 extends LinearOpMode {
 
+    //region Declare Hardware
     // Declare OpMode members for each of the 4 drive motors and 3 horizontal/vertical lift motors
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotor leftFrontDrive = null; // Spongebob
@@ -110,8 +116,12 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
     ContinuousServoController wristServoController = null;
     //ContinuousServoController intakeArmServoController = null;
 
+    // Sensors
     private DistanceSensor backDistance = null;
+    private Limelight3A limelight;
+    //endregion
 
+    //region Declare Booleans
     // Servo Toggle Debounces
     Boolean intakeClawState = false; // true = open, false = close (i think)
     Boolean intakeRotateState = false; // true = transfer rotation
@@ -132,12 +142,15 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
     Boolean grabbing = false;
     Boolean intakeWaitToReturn = false;
     double grabTimer = 0.0;
+    //endregion
+
 
     @Override
     public void runOpMode() {
-
         // Initialize the hardware variables. Note that the strings used here must correspond
         // to the names assigned during the robot configuration step on the DS or RC devices.
+
+        //region Find Hardware
         leftFrontDrive  = hardwareMap.get(DcMotor.class, "leftFront");
         leftBackDrive  = hardwareMap.get(DcMotor.class, "leftBack");
         rightFrontDrive = hardwareMap.get(DcMotor.class, "rightFront");
@@ -147,6 +160,7 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
         verticalRight = hardwareMap.get(DcMotor.class, "verticalRight");
         verticalLeft = hardwareMap.get(DcMotor.class, "verticalLeft");
         horizontalDrive = hardwareMap.get(DcMotor.class, "horizontalDrive");
+
 
         // All 4 input servos
         intakeClaw = hardwareMap.get(Servo.class, "intakeClaw"); // Exp. Hub P4
@@ -167,28 +181,22 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
         armEncoder1 = hardwareMap.get(AnalogInput.class, "armEncoder1");
         armEncoder2 = hardwareMap.get(AnalogInput.class, "armEncoder2");
 
+
         // All the digital magnetic limit switches
         magLimVertical1 = hardwareMap.get(DigitalChannel.class, "magLimVertical1");
         magLimVertical2 = hardwareMap.get(DigitalChannel.class, "magLimVertical2");
         magLimHorizontal1 = hardwareMap.get(DigitalChannel.class, "magLimHorizontal1");
         magLimHorizontal2 = hardwareMap.get(DigitalChannel.class, "magLimHorizontal2");
 
-        // The singular distance sensor we have. Yay.
+        // Get sensors here
         backDistance = hardwareMap.get(DistanceSensor.class, "backDistance");
-        magLimVertical1.setMode(DigitalChannel.Mode.INPUT);
-        magLimHorizontal1.setMode(DigitalChannel.Mode.INPUT);
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        //endregion
 
-
-        CRServo dummy = null;
-        ContinuousServoController deposLeftController = new ContinuousServoController(dummy, depositEncoder1);
-        ContinuousServoController deposRightController = new ContinuousServoController(dummy, depositEncoder1);
-        ContinuousServoController wristServoController = new ContinuousServoController(dummy, wristEncoder1);
-        //ContinuousServoController intakeArmServoController = new ContinuousServoController(intakeArm, armEncoder1);
-
-
+        //region Set States
         String robotState = "Transfer";
         String scoreState = "Sample";
-
+        //endregion
 
         // ########################################################################################
         // !!!!            IMPORTANT Drive Information. Test your motor directions.            !!!!
@@ -200,6 +208,8 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
         // when you first test your robot, push the left joystick forward and observe the direction the wheels turn.
         // Reverse the direction (flip FORWARD <-> REVERSE ) of any wheel that runs backward
         // Keep testing until ALL the wheels move the robot forward when you push the left joystick forward.
+
+        //region Configure Hardware
         leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
         leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
         rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -208,6 +218,17 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
         verticalLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         horizontalDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        magLimVertical1.setMode(DigitalChannel.Mode.INPUT);
+        magLimHorizontal1.setMode(DigitalChannel.Mode.INPUT);
+
+        CRServo dummy = null;
+        ContinuousServoController deposLeftController = new ContinuousServoController(dummy, depositEncoder1);
+        ContinuousServoController deposRightController = new ContinuousServoController(dummy, depositEncoder1);
+        ContinuousServoController wristServoController = new ContinuousServoController(dummy, wristEncoder1);
+        //ContinuousServoController intakeArmServoController = new ContinuousServoController(intakeArm, armEncoder1);
+        //endregion
+
+        //region Wait for Start
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
         telemetry.update();
@@ -216,13 +237,19 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
 
         waitForStart();
         runtime.reset();
+        //endregion
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
-            boolean magHorOn = !magLimHorizontal1.getState(); // Usually, "false" means pressed
-            boolean magVertOn = !magLimVertical1.getState(); // Usually, "false" means pressed
             robotState = getRobotState(wristServoController, deposLeftController);
 
+            //region Magnetic Limit Switches
+            boolean magHorOn = !magLimHorizontal1.getState(); // Usually, "false" means pressed
+            boolean magVertOn = !magLimVertical1.getState(); // Usually, "false" means pressed
+            boolean limitSwitchNotTriggered = magLimVertical1.getState();
+            //endregion
+
+            //region Drivetrain Movement
             double lateralBoost = 0;
             if (gamepad1.dpad_left) {
                 lateralBoost = -0.25;
@@ -236,9 +263,14 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
                 axialBoost = 0.25;
             }
 
-
             double speedMultiplier = 0.67289;
             double max;
+
+            if (gamepad1.left_bumper) {
+                speedMultiplier = 0.25;
+            } else if (gamepad1.right_bumper) {
+                speedMultiplier = 1;
+            }
 
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
             double axial   = axialBoost - gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
@@ -254,8 +286,6 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
             double upDrivePower    = 0;
             double outDrivePower   = 0;
 
-            boolean limitSwitchNotTriggered = magLimVertical1.getState();
-
             // Normalize the values so no wheel power exceeds 100%
             // This ensures that the robot maintains the desired motion.
             max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
@@ -268,9 +298,9 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
                 leftBackPower   /= max;
                 rightBackPower  /= max;
             }
+            //endregion
 
-
-
+            //region Return to Transfer
             // Bring everything back to the transfer position
             if (gamepad2.b) {
                 intakeState = true;
@@ -302,16 +332,15 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
                     intakeWaitToReturn = true;
                 }
             }
+            //endregion
 
-
-
+            //region Intake Controls (Arm + Wrist)
             // NOTE: All code below controls the intake
             if (intakeState) {
-
                 moveWristTo("Close", intakeWrist);
                 if (Math.abs(wristServoController.getCurrentPositionInDegrees() - 59) <= 10) {
                     if (intakeWaitToReturn) {
-                        intakeClawState = true;
+                        //intakeClawState = true;
                         moveArmTo("Wait", intakeArm);
                     } else {
                         moveArmTo("Close", intakeArm);
@@ -321,7 +350,7 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
                 moveWristTo("Open", intakeWrist);
                 if (Math.abs(wristServoController.getCurrentPositionInDegrees() - 9.16) <= 9.16) {
                     if (!grabbing) {
-                        intakeClawState = false;
+                        //intakeClawState = false;
                         moveArmTo("Open", intakeArm);
                     } else {
                         moveArmTo("Grab", intakeArm);
@@ -335,9 +364,9 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
             if (!gamepad2.a && intakeDebounce) {
                 intakeDebounce = false;
             }
+            //endregion
 
-
-
+            //region Intake Rotate Controls
             // NOTE: All code below controls the intake rotate
             // intakeRotateState = true (Transfer Position) or false (Not Transfer Position)
             if (intakeRotateState) { intakeRotate.setPosition(0); } else { intakeRotate.setPosition(1); }
@@ -363,9 +392,9 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
             if (!gamepad2.right_bumper && intakeRotateDebounce) {
                 intakeRotateDebounce = false;
             }
+            //endregion
 
-
-
+            //region Intake Claw Controls
             // NOTE: All code below controls the intake claw
             // intakeClawState = true (Closed) or false (Open)
             if (intakeClawState) { intakeClaw.setPosition(0); } else { intakeClaw.setPosition(1); }
@@ -403,9 +432,9 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
             if (runtime.seconds() > grabTimer + 0.1 && grabbing) {
                 grabbing = false;
             }
+            //endregion
 
-
-
+            //region Horizontal Drive Controls
             // LOCK THE OUT DRIVE!
             if (gamepad1.x && (!horizontalDriveLockDebounce)) {
                 horizontalDriveLockDebounce = true;
@@ -429,7 +458,40 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
             }
 
 
+            // Horizontal "Lift" Motor Controls
+            if (gamepad2.dpad_right) {
+                outDrivePower = 1;
+            } else if (gamepad2.dpad_left && horizontalDrive.getCurrentPosition() > 15) {
+                outDrivePower = -1;
+            } else {
+                outDrivePower = 0;
+            }
 
+
+            if ((horizontalDrive.getCurrentPosition() < -10) && (!gamepad2.dpad_right) && (!horizontalDriveLockState)) {
+                horizontalDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                horizontalDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                horizontalDrive.setTargetPosition(0);
+                outDrivePower = 0.2;
+            } else if (horizontalDriveLockState) {
+                horizontalDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                horizontalDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                horizontalDrive.setTargetPosition(0);
+                outDrivePower = 0.2;
+            } else {
+                horizontalDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            }
+
+
+            // Send calculated power to wheels
+            if (horizontalDrive.getCurrentPosition() > 15) {
+                outDrivePower += (gamepad2.right_trigger - gamepad2.left_trigger);
+            } else {
+                outDrivePower += (gamepad2.right_trigger);
+            }
+            //endregion
+
+            //region Depos Claw Controls
             if (deposClawState) { deposClaw.setPosition(0.8); } else { deposClaw.setPosition(0.3); }
             switch (robotState) {
                 case "Depos":
@@ -442,6 +504,8 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
                         }
                     }
                     break;
+                case "Stop Giving Me Errors":
+                    break;
                 default:
                     if (gamepad2.y && (!deposClawDebounce)) {
                         deposClawDebounce = true;
@@ -452,9 +516,9 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
             if (!gamepad2.y && deposClawDebounce) {
                 deposClawDebounce = false;
             }
+            //endregion
 
-
-
+            //region Depos Arm Controls
             if (gamepad2.left_bumper && (!deposArmDebounce)) {
                 deposArmDebounce = true;
                 deposArmState = !deposArmState;
@@ -485,9 +549,9 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
                         break;
                 }
             }
+            //endregion
 
-
-
+            //region Vertical Lift Controls
             // Vertical Lift Motor Controls
             if (gamepad2.dpad_up) {
                 upDrivePower = 1;
@@ -498,55 +562,17 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
             }
 
 
-
-            // Horizontal "Lift" Motor Controls
-            if (gamepad2.dpad_right) {
-                outDrivePower = 1;
-            } else if (gamepad2.dpad_left && horizontalDrive.getCurrentPosition() > 15) {
-                outDrivePower = -1;
-            } else {
-                outDrivePower = 0;
-            }
-
-
-
-            if (gamepad1.left_bumper) {
-                speedMultiplier = 0.25;
-            } else if (gamepad1.right_bumper) {
-                speedMultiplier = 1;
-            }
-
-
-
-            if ((horizontalDrive.getCurrentPosition() < -10) && (!gamepad2.dpad_right) && (!horizontalDriveLockState)) {
-                horizontalDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                horizontalDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                horizontalDrive.setTargetPosition(0);
-                outDrivePower = 0.2;
-            } else if (horizontalDriveLockState) {
-                horizontalDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                horizontalDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                horizontalDrive.setTargetPosition(0);
-                outDrivePower = 0.2;
-            } else {
-                horizontalDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            }
-
-
-
-            // Send calculated power to wheels
-            if (horizontalDrive.getCurrentPosition() > 15) {
-                outDrivePower += (gamepad2.right_trigger - gamepad2.left_trigger);
-            } else {
-                outDrivePower += (gamepad2.right_trigger);
-            }
-
             if (magVertOn && (upDrivePower < 0)) { // Negate downward movement if limit is active
                 upDrivePower = 0;
             } else if ((verticalRight.getCurrentPosition() > 3050) && (upDrivePower > 0)) { // Negate upward movement if too high
                 upDrivePower = 0;
             }
+            //endregion
 
+            // Everything above are controls
+            // Everything below runs motors and telemetry
+
+            //region Run Motors
             leftFrontDrive.setPower(leftFrontPower * speedMultiplier);
             rightFrontDrive.setPower(rightFrontPower * speedMultiplier);
             leftBackDrive.setPower(leftBackPower * speedMultiplier);
@@ -556,7 +582,9 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
                 verticalLeft.setPower(-upDrivePower);
                 horizontalDrive.setPower(outDrivePower);
             }
+            //endregion
 
+            //region Telemetry
             int upDrivePos1 = verticalRight.getCurrentPosition();
             int upDrivePos2 = verticalLeft.getCurrentPosition();
 
@@ -578,39 +606,13 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
             telemetry.addData("Depos Servo Encoder: ", (deposLeftController.getCurrentPositionInDegrees()));
 
             telemetry.update();
+            //endregion
         }
     }
 
 
-    /*
-    // Move intake arm to "Open" or "Close"
-    public void moveArmTo(String state, ContinuousServoController intakeArmServoController) {
-        switch (state) {
-            case "Open": // Equal to grab position
-                if (intakeArmServoController.getCurrentPositionInDegrees() > 53.5) {
-                    intakeArmServoController.runToPosition(53.5, true, 1);
-                } else {
-                    intakeArmServoController.runToPosition(53.5, false, 1);
-                }
-                break;
-            case "Close": // Equal to transfer position
-                if (intakeArmServoController.getCurrentPositionInDegrees() < 77.7) {
-                    intakeArmServoController.runToPosition(77.7, false, 1);
-                } else {
-                    intakeArmServoController.runToPosition(77.7, true, 1);
-                }
-                break;
-            case "Grab": // Equal to grab position
-                if (intakeArmServoController.getCurrentPositionInDegrees() > 46.5) {
-                    intakeArmServoController.runToPosition(46.5, true, 1);
-                } else {
-                    intakeArmServoController.runToPosition(46.5, false, 1);
-                }
-                break;
-        }
-    }
-     */
-
+    //region Servo Helper Functions
+    // Move intake wrist to "Open" or "Close"
     public void moveArmTo(String state, Servo arm) {
         switch (state) {
             case "Open": // Equal to grab position
@@ -648,8 +650,8 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
                 right.setPosition(0);
                 break;
             case "Depos": // Equal to transfer position
-                left.setPosition(0.65);
-                right.setPosition(0.35);
+                left.setPosition(0.6);
+                right.setPosition(0.4);
                 break;
             case "Specimen":
                 left.setPosition(0.3);
@@ -657,7 +659,9 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
                 break;
         }
     }
+    //endregion
 
+    //region State Finding Functions
     // Check if horizontal slides are all the way in
     public Boolean extendoClosed() { return (horizontalDrive.getCurrentPosition() < 25); }
     // Check if lift is all the way down
@@ -686,4 +690,5 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
         }
         return "Unknown";
     }
+    //endregion
 }
