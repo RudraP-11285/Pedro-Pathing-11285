@@ -29,6 +29,8 @@
 
 package org.firstinspires.ftc.teamcode.teleop;
 
+import java.util.Arrays;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -604,6 +606,9 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
             telemetry.addData("Wrist Servo Encoder: ", (wristServoController.getCurrentPositionInDegrees()));
             telemetry.addData("Arm Servo: ", (intakeArm.getPosition()));
             telemetry.addData("Depos Servo Encoder: ", (deposLeftController.getCurrentPositionInDegrees()));
+
+            LLResult result = limelight.getLatestResult();
+            telemetry.addData("PythonOutput", Arrays.toString(result.getPythonOutput()));
 
             telemetry.update();
             //endregion
