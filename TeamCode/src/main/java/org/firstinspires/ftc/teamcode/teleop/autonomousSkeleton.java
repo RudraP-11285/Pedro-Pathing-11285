@@ -33,7 +33,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.Timer;
  */
 
 @Autonomous(name = "Example Auto Blue", group = "TeleOp")
-public class forwardOdometry extends OpMode {
+public class autonomousSkeleton extends OpMode {
     //region Declare Hardware
     // Declare OpMode members for each of the 4 drive motors and 3 horizontal/vertical lift motors
     private ElapsedTime runtime = new ElapsedTime();
@@ -134,6 +134,7 @@ public class forwardOdometry extends OpMode {
      * Lets assume our robot is 18 by 18 inches
      * Lets assume the Robot is facing the human player and we want to score in the bucket */
 
+    //region Declare Poses
     /** Start Pose of our robot */
     private final Pose startPose = new Pose(9, 96, Math.toRadians(0));
 
@@ -159,6 +160,7 @@ public class forwardOdometry extends OpMode {
     /* These are our Paths and PathChains that we will define in buildPaths() */
     private Path scorePreload, park;
     private PathChain grabPickup1, grabPickup2, grabPickup3, scorePickup1, scorePickup2, scorePickup3;
+    //endregion
 
     /** Build the paths for the auto (adds, for example, constant/linear headings while doing paths)
      * It is necessary to do this so that all the paths are built before the auto starts. **/
@@ -232,37 +234,33 @@ public class forwardOdometry extends OpMode {
      * The followPath() function sets the follower to run the specific path, but does NOT wait for it to finish before moving on. */
     public void autonomousPathUpdate() {
         switch (pathState) {
-            case 0: // Move to Depos Position
-                deposClawState = true;
-                intakeClawState = false;
-                intakeRotateState = false;
-                follower.followPath(scorePreload, true);
-                setPathState(1);
-                break;
-            case 1: // Bring lifts up as we move to Depos Position
+            case 0: // Move to Score, Bring Lift Up
+                deposClawState = true; // Close Depos Claw
+                intakeClawState = false; // Open Intake Claw
+                intakeRotateState = false; // Rotate Intake (Transfer Position)
+                follower.followPath(scorePreload, true); // Move to score position
+
                 if (verticalRight.getCurrentPosition() < 3150) {
                     verticalLeft.setPower(-1);
                     verticalRight.setPower(1);
                 }
 
-                /* You could check for
-                - Follower State: "if(!follower.isBusy() {}" (Though, I don't recommend this because it might not return due to holdEnd
-                - Time: "if(pathTimer.getElapsedTimeSeconds() > 1) {}"
-                - Robot Position: "if(follower.getPose().getX() > 36) {}"
-                */
-
-                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(follower.getPose().getX() > (scorePose.getX() - 0.75) && follower.getPose().getY() > (scorePose.getY() - 0.75) && (!(verticalRight.getCurrentPosition() < 3150))) {
-                    /* Score Preload */
+                if (follower.getPose().getX() > (scorePose.getX() - 0.75) && follower.getPose().getY() > (scorePose.getY() - 0.75) && (!(verticalRight.getCurrentPosition() < 3150))) {
                     verticalLeft.setPower(0);
                     verticalRight.setPower(0);
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    //follower.followPath(scorePreload,true);
+                    setPathState(1);
+                    timeStamp = opmodeTimer.getElapsedTimeSeconds();
+                }
+                break;
+            case 1: // Bring Up Arm and Drop
+                deposArmState = true;
+                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.5)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
+                    deposClawState = false;
                     setPathState(2);
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 }
                 break;
-            case 2: // Bring the Depos Arm Up
+            case 2: // Bring the Depos Arm Back Down
                 deposArmState = true;
                 if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.5)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
                     deposClawState = false;
@@ -382,8 +380,8 @@ public class forwardOdometry extends OpMode {
                     verticalLeft.setPower(-1);
                     verticalRight.setPower(1);
                 } else {
-                   setPathState(9);
-                   timeStamp = opmodeTimer.getElapsedTimeSeconds();
+                    setPathState(9);
+                    timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 }
                 break;
             case 9: // Bring Depos Arm Up and Drop
