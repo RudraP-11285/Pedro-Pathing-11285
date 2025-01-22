@@ -689,8 +689,8 @@ public class SpecimenTeleop extends LinearOpMode {
                 right.setPosition(0);
                 break;
             case "Depos": // Equal to transfer position
-                left.setPosition(0.4);
-                right.setPosition(0.6);
+                left.setPosition(0.45);
+                right.setPosition(0.55);
                 break;
             case "Specimen":
                 left.setPosition(0.3);
