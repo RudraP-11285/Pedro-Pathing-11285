@@ -210,7 +210,7 @@ public class SpecimenTeleop extends LinearOpMode {
 
 
         String robotState = "Transfer";
-        String scoreState = "Sample";
+        String scoreState = "Specimen";
 
 
         // ########################################################################################
@@ -689,8 +689,8 @@ public class SpecimenTeleop extends LinearOpMode {
                 right.setPosition(0);
                 break;
             case "Depos": // Equal to transfer position
-                left.setPosition(0.45);
-                right.setPosition(0.55);
+                left.setPosition(0.61);
+                right.setPosition(0.39);
                 break;
             case "Specimen":
                 left.setPosition(0.3);
