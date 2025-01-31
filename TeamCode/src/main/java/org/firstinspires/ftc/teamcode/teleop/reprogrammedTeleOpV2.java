@@ -448,7 +448,7 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
                         grabbing = true;
 
 
-                        if (pythonOutputs[9] < 0.5) {
+                        if (pythonOutputs[9] > 0.5) {
                             intakeRotateState = true;
                         } else {
                             intakeRotateState = false;
@@ -687,6 +687,8 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
                     status.getTemp(), status.getCpu(),(int)status.getFps());
             telemetry.addData("Pipeline", "Index: %d, Type: %s",
                     status.getPipelineIndex(), status.getPipelineType());
+            telemetry.addData("Blue Vertical",pythonOutputs[4]);
+            telemetry.addData("Yellow Vertical", pythonOutputs[9]);
 
 
             if (result != null) {
