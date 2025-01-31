@@ -32,7 +32,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.Timer;
  * @version 2.0, 11/28/2024
  */
 
-@Autonomous(name = "Example Auto Blue", group = "TeleOp")
+@Autonomous(name = "Auto Blue", group = "TeleOp")
 public class forwardOdometry extends OpMode {
     //region Declare Hardware
     // Declare OpMode members for each of the 4 drive motors and 3 horizontal/vertical lift motors
