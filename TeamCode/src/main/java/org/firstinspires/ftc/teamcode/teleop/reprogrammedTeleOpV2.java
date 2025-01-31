@@ -448,7 +448,7 @@ public class reprogrammedTeleOpV2 extends LinearOpMode {
                         grabbing = true;
 
 
-                        if (pythonOutputs[9] > 0.5) {
+                        if (pythonOutputs[9] < 0.5) {
                             intakeRotateState = true;
                         } else {
                             intakeRotateState = false;
