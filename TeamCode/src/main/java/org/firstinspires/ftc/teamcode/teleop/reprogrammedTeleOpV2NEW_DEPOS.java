@@ -72,8 +72,8 @@ import java.util.Arrays;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="NEW ARM CONTROL for V:3", group="TeleOp")
-public class NewArmControl extends LinearOpMode {
+@TeleOp(name="! Into the Deep - V2 TeleOp DEPOS v3", group="TeleOp")
+public class reprogrammedTeleOpV2NEW_DEPOS extends LinearOpMode {
 
     //region Declare Hardware
     // Declare OpMode members for each of the 4 drive motors and 3 horizontal/vertical lift motors
@@ -92,7 +92,11 @@ public class NewArmControl extends LinearOpMode {
     private Servo intakeRotate =  null; // Servo that rotates the claw left right
     private Servo intakeWrist =  null; // Servo that rotates the claw up down
 
-    // All 3 of the Outtake Servos plugged into Control Hub
+//    private Servo deposClaw =  null; // Edward
+//    private Servo deposLeft =  null; // Stuart
+//    private Servo deposRight =  null; // Felicia
+
+    // NEW DEPOS ASSEMBLY SERVOS
     private Servo servoSlide =  null; // Edward
     private Servo inClaw =  null; // Stuart
     private Servo wristVert =  null; // Felicia
@@ -110,9 +114,9 @@ public class NewArmControl extends LinearOpMode {
     private DigitalChannel magLimHorizontal1 = null;
     private DigitalChannel magLimHorizontal2 = null;
 
-    ContinuousServoController deposLeftController = null;
-    ContinuousServoController deposRightController = null;
-    ContinuousServoController wristServoController = null;
+//    ContinuousServoController deposLeftController = null;
+//    ContinuousServoController deposRightController = null;
+//    ContinuousServoController wristServoController = null;
     //ContinuousServoController intakeArmServoController = null;
 
     // Sensors
@@ -172,12 +176,12 @@ public class NewArmControl extends LinearOpMode {
             return positions;
         }
     }
-    DeposState deposState = DeposState.START;
+    NewArmControl.DeposState deposState = NewArmControl.DeposState.START;
 
-    ServoState vWristState = ServoState.ON;
-    ServoState slideState = ServoState.ON;
-    ServoState clawState = ServoState.ON;
-
+    NewArmControl.ServoState vWristState = NewArmControl.ServoState.ON;
+    NewArmControl.ServoState slideState = NewArmControl.ServoState.ON;
+    NewArmControl.ServoState clawState = NewArmControl.ServoState.ON;
+//--------------------------------------------positions-----------------------------------------------
     private final double[] vWristPos = {0.0,1.0};
     private final double[] slidePos = {0.0,1.0};
     private final double[] clawPos = {0.0,1.0};
@@ -186,6 +190,7 @@ public class NewArmControl extends LinearOpMode {
     boolean slideDebounce = false;
     boolean newClawDebounce = false;
     boolean transferDebouce = false;
+
     @Override
     public void runOpMode() {
         // Initialize the hardware variables. Note that the strings used here must correspond
@@ -213,11 +218,10 @@ public class NewArmControl extends LinearOpMode {
 //        deposClaw = hardwareMap.get(Servo.class, "deposClaw");
 //        deposLeft = hardwareMap.get(Servo.class, "deposLeft");
 //        deposRight = hardwareMap.get(Servo.class, "deposRight");
-//-----------------------------------New Servos------------------------------------------
+
         servoSlide = hardwareMap.get(Servo.class,"servoSlide");
         inClaw = hardwareMap.get(Servo.class,"inClaw");
         wristVert = hardwareMap.get(Servo.class,"vertWrist");
-//---------------------------------------------------------------------------------------
 
         // All 3 special servo encoders
         depositEncoder1 = hardwareMap.get(AnalogInput.class, "depositEncoder1");
@@ -354,10 +358,291 @@ public class NewArmControl extends LinearOpMode {
 
             //region Return to Transfer
             // Bring everything back to the transfer position
+            if (gamepad2.b) {
+                intakeState = true;
+                intakeRotateState = false;
+                intakeClawState = true;
+                deposArmState = false;
 
-            int[] currentIndices = {0,0,0};
-            boolean[] gamepadBools = {gamepad2.left_bumper,gamepad2.right_bumper,gamepad2.a};
-            ServoState[] servoStates = {slideState,vWristState,clawState};
+
+                if ((horizontalDrive.getCurrentPosition() > 350 && verticalRight.getCurrentPosition() > 25) || (!magHorOn && verticalRight.getCurrentPosition() < 25))  {
+                    outDrivePower = -1;
+                } else {
+                    outDrivePower = 0;
+                }
+
+                if (verticalRight.getCurrentPosition() > 5) {
+                    upDrivePower = -1;
+                    //verticalLeft.setPower(1);
+                    //verticalRight.setPower(-1);
+                } else {
+                    upDrivePower = 0;
+                    //verticalLeft.setPower(0);
+                    //verticalRight.setPower(0);
+                }
+
+                if (verticalRight.getCurrentPosition() < 200) {
+                    deposClawState = false;
+                    intakeWaitToReturn = false;
+                } else {
+                    intakeWaitToReturn = true;
+                }
+            }
+            //endregion
+
+            //region Intake Controls (Arm + Wrist)
+            // NOTE: All code below controls the intake
+            if (intakeState) {
+                moveWristTo("Close", intakeWrist);
+                if (Math.abs(wristServoController.getCurrentPositionInDegrees() - 50) <= 10) {
+                    if (intakeWaitToReturn) {
+                        //intakeClawState = true;
+                        moveArmTo("Wait", intakeArm);
+                    } else {
+                        moveArmTo("Close", intakeArm);
+                    }
+                }
+            } else {
+                deposArmState = true;
+                if (!grabbing) {
+                    moveWristTo("Open", intakeWrist);
+                } else {
+                    moveWristTo("Grab", intakeWrist);
+                }
+
+                if ((Math.abs(wristServoController.getCurrentPositionInDegrees() - 9.16) <= 9.16) || (Math.abs(wristServoController.getCurrentPositionInDegrees() - 100) <= 10)) {
+                    if (!grabbing) {
+                        //intakeClawState = false;
+                        moveArmTo("Open", intakeArm);
+                    } else {
+                        moveArmTo("Grab", intakeArm);
+                    }
+                }
+            }
+            if (gamepad2.a && (!intakeDebounce)) {
+                intakeDebounce = true;
+                intakeState = !intakeState;
+            }
+            if (!gamepad2.a && intakeDebounce) {
+                intakeDebounce = false;
+            }
+            //endregion
+
+            //region Intake Rotate Controls
+            // NOTE: All code below controls the intake rotate
+            // intakeRotateState = true (Not Transfer Position) or false (Transfer Position)
+            if (intakeRotateState) { intakeRotate.setPosition(0); } else { intakeRotate.setPosition(1); }
+            // Intake Rotate controls under different circumstances
+            switch (robotState) {
+                case "Transfer Ready":
+                    // When transferring, lock claw rotation in transfer position
+                    intakeRotateState = false;
+                    break;
+                case "Transfer Complete":
+                    // When transfer is done, keep it locked to avoid interference
+                    intakeRotateState = false;
+                    break;
+                default:
+                    if (gamepad2.right_bumper && (!intakeRotateDebounce) && !gamepad2.start) {
+                        intakeRotateDebounce = true;
+                        // In all other cases, allow free control
+                        intakeRotateState = !intakeRotateState;
+                    }
+                    break;
+            }
+            // Reset debounce once key up
+            if (!gamepad2.right_bumper && intakeRotateDebounce) {
+                intakeRotateDebounce = false;
+            }
+            //endregion
+
+            //region Intake Claw Controls
+            // NOTE: All code below controls the intake claw
+            LLResult cameraResult = limelight.getLatestResult();
+            double[] pythonOutputs = cameraResult.getPythonOutput();
+
+            // intakeClawState = true (Closed) or false (Open)
+            if (intakeClawState) { intakeClaw.setPosition(0); } else { intakeClaw.setPosition(1); }
+            // Claw controls under different circumstances
+            switch (robotState) {
+                case "Grab":
+                    if (gamepad2.x && (!intakeClawDebounce)) {
+                        intakeClawDebounce = true;
+                        if (intakeClawState) {
+                            intakeClawState = false;
+                        } else {
+                            grabTimer = runtime.seconds();
+                            //intakeClawState = true;
+                            grabbing = true;
+                        }
+                        // If "x" pressed while grabbing, jab down and grab. Otherwise allow open and close
+                    } else if (autoIntakeMode && (pythonOutputs[0] > 0.5) && (Math.abs(pythonOutputs[1]) < 120 && Math.abs(pythonOutputs[2]) < 60) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
+                        grabTimer = runtime.seconds();
+                        //intakeClawState = true;
+                        grabbing = true;
+
+
+                        if (pythonOutputs[4] >0.5) {
+                            intakeRotateState = true;
+                        } else {
+                            intakeRotateState = false;
+                        }
+
+                    } else if (autoIntakeMode && (pythonOutputs[5] > 0.5) && (Math.abs(pythonOutputs[6]) < 120 && Math.abs(pythonOutputs[7]) < 60) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
+                        grabTimer = runtime.seconds();
+                        //intakeClawState = true;
+                        grabbing = true;
+
+
+                        if (pythonOutputs[9] > 0.5) {
+                            intakeRotateState = true;
+                        } else {
+                            intakeRotateState = false;
+                        }
+
+                    }
+                    break;
+                case "Transfer Ready":
+                    // Do not allow opening. Keep it closed.
+                    intakeClawState = true;
+                    break;
+                default:
+                    if (gamepad2.x && (!intakeClawDebounce)) {
+                        intakeClawDebounce = true;
+                        // In all other cases, allow free control
+                        intakeClawState = !intakeClawState;
+                    }
+                    break;
+            }
+            // Reset debounce once key up
+            if (!gamepad2.x && intakeClawDebounce) {
+                intakeClawDebounce = false;
+            }
+            if (autoIntakeMode) {
+                if (runtime.seconds() > grabTimer + 0.4 && grabbing) {
+                    grabbing = false;
+                }
+            } else {
+                if (runtime.seconds() > grabTimer + 0.3 && grabbing) {
+                    grabbing = false;
+                }
+            }
+            if (runtime.seconds() > grabTimer + 0.01 && grabbing && runtime.seconds() < grabTimer + 0.6) {
+                intakeClawState = true;
+            }
+            //endregion
+
+            //region Horizontal Drive Controls
+            // LOCK THE OUT DRIVE!
+            if (gamepad1.x && (!horizontalDriveLockDebounce)) {
+                horizontalDriveLockDebounce = true;
+                if (horizontalDriveLockState) {
+                    // Lock The Out Drive
+                    horizontalDriveLockState = false;
+                    /*
+                    outDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    outDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    outDrive.setTargetPosition(outDrive.getCurrentPosition());
+                     */
+                } else {
+                    // Unlock the Out Drive
+                    horizontalDriveLockState = true;
+                    horizontalDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                    // (un)Rotate the servo
+                }
+            }
+            if (!gamepad1.x && horizontalDriveLockDebounce) {
+                horizontalDriveLockDebounce = false;
+            }
+
+
+            // Horizontal "Lift" Motor Controls
+            if (!gamepad2.b) {
+                if (gamepad2.dpad_right) {
+                    outDrivePower = 1;
+                } else if (gamepad2.dpad_left && !magHorOn) {
+                    outDrivePower = -1;
+                } else {
+                    outDrivePower = 0;
+                }
+            }
+
+            /*
+            if ((magHorOn) && (!gamepad2.dpad_right) && (!horizontalDriveLockState)) {
+                horizontalDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                horizontalDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                horizontalDrive.setTargetPosition(0);
+                outDrivePower = 0.2;
+            } else if (horizontalDriveLockState) {
+                horizontalDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                horizontalDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                horizontalDrive.setTargetPosition(0);
+                outDrivePower = 0.2;
+            } else {
+                horizontalDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            }
+            */
+
+
+
+            // Send calculated power to wheels
+            if (!magHorOn) {
+                outDrivePower += (gamepad2.right_trigger - gamepad2.left_trigger);
+            } else {
+                outDrivePower += (gamepad2.right_trigger);
+            }
+            //endregion
+
+            //region Depos Claw Controls
+//            if (deposClawState) { deposClaw.setPosition(0.8); } else { deposClaw.setPosition(0.3); }
+//            switch (robotState) {
+//                case "Depos":
+//                    if (deposArmDown(deposLeftController)) {
+//                        deposClawState = true;
+//                    } else {
+//                        if (gamepad2.y && (!deposClawDebounce)) {
+//                            deposClawDebounce = true;
+//                            deposClawState = !deposClawState;
+//                        }
+//                    }
+//                    break;
+//                case "Stop Giving Me Errors":
+//                    break;
+//                default:
+//                    if (gamepad2.y && (!deposClawDebounce)) {
+//                        deposClawDebounce = true;
+//                        deposClawState = !deposClawState;
+//                    }
+//                    break;
+//            }
+//            if (!gamepad2.y && deposClawDebounce) {
+//                deposClawDebounce = false;
+//            }
+            //endregion
+
+            //region Depos Arm Controls
+//            if (gamepad2.left_bumper && (!deposArmDebounce)) {
+//                deposArmDebounce = true;
+//                deposArmState = !deposArmState;
+//            }
+//            if (!(gamepad2.left_bumper || gamepad1.y || gamepad2.left_stick_button) && deposArmDebounce) {
+//                deposArmDebounce = false;
+//            }
+//            if (deposArmState) {
+//                switch (scoreState) {
+//                    case "Sample":
+//                        moveDeposTo("Depos", deposLeft, deposRight);
+//                        break;
+//                    case "Specimen":
+//                        moveDeposTo("Specimen", deposLeft, deposRight);
+//                        break;
+//                }
+//            } else {
+//                moveDeposTo("Transfer", deposLeft, deposRight);
+//            }
+
+            boolean[] gamepadBools = {gamepad2.left_bumper,gamepad2.right_bumper,gamepad2.dpad_up};
+            NewArmControl.ServoState[] servoStates = {slideState,vWristState,clawState};
             boolean[] servoDebounces = {slideDebounce,vWristDebounce,newClawDebounce};
 
 
@@ -366,13 +651,13 @@ public class NewArmControl extends LinearOpMode {
             for (int i=0;i<3;i++) {
                 if (!gamepadBools[i]) {
                     servoDebounces[i] = false;
-                } else if (gamepad2.left_bumper && !servoDebounces[i]) {
+                } else if (gamepadBools[i] && !servoDebounces[i] && gamepad2.start) {
                     switch (servoStates[i]) {
                         case ON:
-                            servoStates[i] = ServoState.OFF;
+                            servoStates[i] = NewArmControl.ServoState.OFF;
                             break;
                         case OFF:
-                            servoStates[i] = ServoState.ON;
+                            servoStates[i] = NewArmControl.ServoState.ON;
                             break;
                     }
                     intakeServos[i].setPosition(slidePos[servoStates[i].getStateIndex()]);
@@ -380,43 +665,111 @@ public class NewArmControl extends LinearOpMode {
                 }
             }
 
-//--------------------------------------------HERE-----------------------------------------------------
-            if (!gamepad2.y && transferDebouce) {
-                transferDebouce = false;
-            } else if (gamepad2.y && !transferDebouce) {
-                switch (deposState) {
-                    case DEPOS1:
-                        deposState = DeposState.DEPOS2;
+            if ((gamepad1.y || gamepad2.left_stick_button) && (!deposArmDebounce)) {
+                deposArmDebounce = true;
+                switch (scoreState) {
+                    case "Sample":
+                        scoreState = "Specimen";
                         break;
-                    case DEPOS2:
-                        deposState = DeposState.DEPOS1;
+                    case "Specimen":
+                        scoreState = "Sample";
                         break;
                 }
-                for (int i = 0;i<3;i++) {
-                    intakeServos[i].setPosition(deposState.getPositions()[i]);
-                }
-                //Maybe put this outside the conditional
-                transferDebouce = true;
+            }
+            //endregion
+
+            //region Vertical Lift Controls
+            // Vertical Lift Motor Controls
+            if (gamepad2.dpad_up && !gamepad2.start) {
+                upDrivePower = 1;
+            } else if (gamepad2.dpad_down) {
+                upDrivePower = -1;
+            } else if (!gamepad2.b) {
+                upDrivePower = 0;
             }
 
-//-----------------------------------------------------------------------------------------------------
-//            int currentIndex = 0;
-//            if (!(gamepad2.left_bumper && gamepad2.right_bumper)) {
-//                slideDebounce = false;
-//            } else if (gamepad2.left_bumper && !slideDebounce) {
-//                switch (slideState) {
-//                    case ON:
-//                        currentIndex = 0;
-//                        slideState = ServoStates.OFF;
-//                        break;
-//                    case OFF:
-//                        currentIndex = 1;
-//                        slideState = ServoStates.ON;
-//                        break;
-//                }
-//                servoSlide.setPosition(slidePos[currentIndex]);
-//                slideDebounce = true;
-//                }
+
+            if (magVertOn && (upDrivePower < 0)) { // Negate downward movement if limit is active
+                upDrivePower = 0;
+            } else if ((verticalRight.getCurrentPosition() > 3050) && (upDrivePower > 0)) { // Negate upward movement if too high
+                upDrivePower = 0;
+            }
+            //endregion
+
+            if (gamepad1.b && (!autoIntakeDebounce)) {
+                autoIntakeDebounce = true;
+                autoIntakeMode = !autoIntakeMode;
+            }
+            if (!gamepad1.b && autoIntakeDebounce) {
+                autoIntakeDebounce = false;
+            }
+
+            // Everything above are controls
+            // Everything below runs motors and telemetry
+
+            //region Run Motors
+            leftFrontDrive.setPower(leftFrontPower * speedMultiplier);
+            rightFrontDrive.setPower(rightFrontPower * speedMultiplier);
+            leftBackDrive.setPower(leftBackPower * speedMultiplier);
+            rightBackDrive.setPower(rightBackPower * speedMultiplier);
+            //if (!gamepad2.b) {
+                verticalRight.setPower(upDrivePower);
+                verticalLeft.setPower(-upDrivePower);
+                horizontalDrive.setPower(outDrivePower);
+            //}
+            //endregion
+
+            //region Telemetry
+            int upDrivePos1 = verticalRight.getCurrentPosition();
+            int upDrivePos2 = verticalLeft.getCurrentPosition();
+            LLResult result = limelight.getLatestResult();
+
+            // Show the elapsed game time and wheel power.
+            telemetry.addData("Status", "Run Time: " + runtime.toString());
+            telemetry.addData("Lift Encoder Values: ", upDrivePos1 + ", " + upDrivePos2);
+
+            telemetry.addData("Robot State", robotState);
+            telemetry.addData("Claw State", intakeClawState);
+            telemetry.addData("Intake State", intakeState);
+
+
+            //telemetry.addData(" ", " ");
+            //telemetry.addData("Robot State: ", robotState);
+            //telemetry.addData("Intake Rotate State: ", intakeRotateState);
+            //telemetry.addData("Intake Claw State: ", intakeClawState);
+            //telemetry.addData("Depos Arm State: ", deposArmState);
+            //telemetry.addData("Depos Wait: ", intakeWaitToReturn);
+            //telemetry.addData("Horizontal Drive Position: ", horizontalDrive.getCurrentPosition());
+
+
+            //telemetry.addData(" ", " ");
+            telemetry.addData("Wrist Servo Encoder: ", (wristServoController.getCurrentPositionInDegrees()));
+            telemetry.addData("Arm Servo: ", (intakeArm.getPosition()));
+            //telemetry.addData("Depos Servo Encoder: ", (deposLeftController.getCurrentPositionInDegrees()));
+
+
+            telemetry.addData("Connected?", limelight.isConnected());
+            telemetry.addData("Running?", limelight.isRunning());
+
+            LLStatus status = limelight.getStatus();
+            telemetry.addData("Name", "%s",
+                    status.getName());
+            telemetry.addData("LL", "Temp: %.1fC, CPU: %.1f%%, FPS: %d",
+                    status.getTemp(), status.getCpu(),(int)status.getFps());
+            telemetry.addData("Pipeline", "Index: %d, Type: %s",
+                    status.getPipelineIndex(), status.getPipelineType());
+            telemetry.addData("Blue Vertical",pythonOutputs[4]);
+            telemetry.addData("Yellow Vertical", pythonOutputs[9]);
+
+
+            if (result != null) {
+                telemetry.addData("PythonOutput", Arrays.toString(result.getPythonOutput()));
+            } else {
+                telemetry.addData("PythonOutput", "nothing.");
+            }
+
+            telemetry.update();
+            //endregion
         }
         limelight.stop();
     }
