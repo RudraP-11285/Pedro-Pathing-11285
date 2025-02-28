@@ -381,6 +381,9 @@ public class NewArmControl extends LinearOpMode {
             }
 
 //--------------------------------------------HERE-----------------------------------------------------
+            if (robotState == "Depos") {
+
+            }
             if (!gamepad2.y && transferDebouce) {
                 transferDebouce = false;
             } else if (gamepad2.y && !transferDebouce) {
@@ -494,6 +497,22 @@ public class NewArmControl extends LinearOpMode {
     public Boolean deposArmDown(ContinuousServoController controllerDepos) { return (Math.abs(controllerDepos.getCurrentPositionInDegrees() - 14) < 3); }
     // Check if the depos claw is closed
     public Boolean deposClawClosed() { return deposClawState; }
+
+    public DeposState currentDeposState(Servo[] servos) {
+        DeposState[] deposStates = new DeposState[]{DeposState.DEPOS1,DeposState.DEPOS2};
+        int count = 0;
+        for (int i = 0;i<2;i++) {
+            for (int j = 0; j < 3; j++) {
+                if (Math.abs(servos[j].getPosition() - deposStates[i].getPositions()[j]) < 0.01) {
+                    count++;
+                }
+            }
+            if (count == 3) {
+                return deposStates[i];
+            }
+        }
+        return DeposState.START;
+    }
 
     // Get the state of the robot based on other values; can be overridden by certain controls
     public String getRobotState(ContinuousServoController controllerWrist, ContinuousServoController controllerDepos) {

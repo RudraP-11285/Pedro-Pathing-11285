@@ -166,7 +166,7 @@ public class reprogrammedTeleOpV2NEW_DEPOS extends LinearOpMode {
     public enum DeposState {
         START(new double[]{}),
         DEPOS1(new double[]{1.0,1.0,1.0,}), // Put servo values here
-        DEPOS2(new double[]{1.0,1.0,1.0});  // Put other servo values here
+        DEPOS2(new double[]{0,0,0});  // Put other servo values here
         private double[] positions;
         private DeposState(double[] positions) {
             this.positions = positions;
@@ -189,7 +189,7 @@ public class reprogrammedTeleOpV2NEW_DEPOS extends LinearOpMode {
     boolean vWristDebounce = false;
     boolean slideDebounce = false;
     boolean newClawDebounce = false;
-    boolean transferDebouce = false;
+    boolean deposDebounce = false;
 
     @Override
     public void runOpMode() {
@@ -663,6 +663,23 @@ public class reprogrammedTeleOpV2NEW_DEPOS extends LinearOpMode {
                     intakeServos[i].setPosition(slidePos[servoStates[i].getStateIndex()]);
                     servoDebounces[i] = true;
                 }
+            }
+
+            if (!gamepad2.y && deposDebounce) {
+                deposDebounce = false;
+            } else if (gamepad2.y && !deposDebounce) {
+                switch (deposState) {
+                    case DEPOS1:
+                        deposState = NewArmControl.DeposState.DEPOS2;
+                        break;
+                    case DEPOS2:
+                        deposState = NewArmControl.DeposState.DEPOS1;
+                        break;
+                }
+                for (int i = 0;i<3;i++) {
+                    intakeServos[i].setPosition(deposState.getPositions()[i]);
+                }
+                deposDebounce = true;
             }
 
             if ((gamepad1.y || gamepad2.left_stick_button) && (!deposArmDebounce)) {
