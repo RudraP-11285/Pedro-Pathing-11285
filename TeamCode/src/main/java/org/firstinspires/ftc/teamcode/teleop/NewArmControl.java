@@ -178,9 +178,9 @@ public class NewArmControl extends LinearOpMode {
     ServoState slideState = ServoState.ON;
     ServoState clawState = ServoState.ON;
 
-    private final double[] vWristPos = {0.0,1.0};
-    private final double[] slidePos = {0.0,1.0};
-    private final double[] clawPos = {0.0,1.0};
+    private final double[] vWristPos = {0.78,0.725};
+    private final double[] slidePos = {0.36,0.585};
+    private final double[] clawPos = {0.71,0.45};
 
     boolean vWristDebounce = false;
     boolean slideDebounce = false;
@@ -214,9 +214,9 @@ public class NewArmControl extends LinearOpMode {
 //        deposLeft = hardwareMap.get(Servo.class, "deposLeft");
 //        deposRight = hardwareMap.get(Servo.class, "deposRight");
 //-----------------------------------New Servos------------------------------------------
-        servoSlide = hardwareMap.get(Servo.class,"servoSlide");
-        inClaw = hardwareMap.get(Servo.class,"inClaw");
-        wristVert = hardwareMap.get(Servo.class,"vertWrist");
+        servoSlide = hardwareMap.get(Servo.class,"deposExtendo");
+        inClaw = hardwareMap.get(Servo.class,"deposClaw");
+        wristVert = hardwareMap.get(Servo.class,"deposArm");
 //---------------------------------------------------------------------------------------
 
         // All 3 special servo encoders
@@ -359,7 +359,7 @@ public class NewArmControl extends LinearOpMode {
             boolean[] gamepadBools = {gamepad2.left_bumper,gamepad2.right_bumper,gamepad2.a};
             ServoState[] servoStates = {slideState,vWristState,clawState};
             boolean[] servoDebounces = {slideDebounce,vWristDebounce,newClawDebounce};
-
+            double[][] servoPositions = {slidePos,vWristPos,clawPos};
 
             Servo[] intakeServos = {servoSlide,wristVert,inClaw};
 
@@ -375,7 +375,7 @@ public class NewArmControl extends LinearOpMode {
                             servoStates[i] = ServoState.ON;
                             break;
                     }
-                    intakeServos[i].setPosition(slidePos[servoStates[i].getStateIndex()]);
+                    intakeServos[i].setPosition(servoPositions[i][servoStates[i].getStateIndex()]);
                     servoDebounces[i] = true;
                 }
             }
