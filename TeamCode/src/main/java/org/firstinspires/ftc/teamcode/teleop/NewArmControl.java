@@ -160,10 +160,11 @@ public class NewArmControl extends LinearOpMode {
     }
 
     public enum DeposState {
-        START(new double[]{0.585,1.0,0.45}),
-        DEPOS1(new double[]{0.585,1.0,0.71}), // Put servo values here
-        DEPOS2(new double[]{0.36,1.0,0.71}),
-        DEPOSFINAL(new double[]{0.36});
+        START(new double[]{}),
+        DEPOS1(new double[]{0.585,1.0,0.45}),
+        DEPOS2(new double[]{0.585,1.0,0.71}), // Put servo values here
+        DEPOS3(new double[]{0.36,1.0,0.71}),
+        DEPOS4(new double[]{0.36,1.0,0.45});
         // Put other servo values here
         private double[] positions;
         private DeposState(double[] positions) {
@@ -402,6 +403,12 @@ public class NewArmControl extends LinearOpMode {
                         deposState = DeposState.DEPOS2;
                         break;
                     case DEPOS2:
+                        deposState = DeposState.DEPOS3;
+                        break;
+                    case DEPOS3:
+                        deposState = DeposState.DEPOS4;
+                        break;
+                    case DEPOS4:
                         deposState = DeposState.DEPOS1;
                         break;
                 }
