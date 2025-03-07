@@ -400,7 +400,7 @@ public class NewArmControl extends LinearOpMode {
             } else if (gamepad2.y && !transferDebouce) {
                 switch (deposState) {
                     case DEPOS1:
-                        deposState = DeposState.DEPOS2;
+                        deposState = DeposState.DEPOS4;
                         break;
                     case DEPOS2:
                         deposState = DeposState.DEPOS3;
