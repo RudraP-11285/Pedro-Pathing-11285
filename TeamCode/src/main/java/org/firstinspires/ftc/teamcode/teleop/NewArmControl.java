@@ -160,9 +160,11 @@ public class NewArmControl extends LinearOpMode {
     }
 
     public enum DeposState {
-        START(new double[]{}),
-        DEPOS1(new double[]{1.0,1.0,1.0,}), // Put servo values here
-        DEPOS2(new double[]{1.0,1.0,1.0});  // Put other servo values here
+        START(new double[]{0.585,1.0,0.45}),
+        DEPOS1(new double[]{0.585,1.0,0.71}), // Put servo values here
+        DEPOS2(new double[]{0.36,1.0,0.71}),
+        DEPOSFINAL(new double[]{0.36});
+        // Put other servo values here
         private double[] positions;
         private DeposState(double[] positions) {
             this.positions = positions;
@@ -366,16 +368,24 @@ public class NewArmControl extends LinearOpMode {
             for (int i=0;i<3;i++) {
                 if (!gamepadBools[i]) {
                     servoDebounces[i] = false;
-                } else if (gamepad2.left_bumper && !servoDebounces[i]) {
-                    switch (servoStates[i]) {
-                        case ON:
-                            servoStates[i] = ServoState.OFF;
+                } else if (gamepadBools[i] && !servoDebounces[i]) {
+//                    switch (servoStates[i]) {
+//                        case ON:
+//                            servoStates[i] = ServoState.OFF;
+//                            break;
+//                        case OFF:
+//                            servoStates[i] = ServoState.ON;
+//                            break;
+//                    }
+                    switch (currentIndices[i]) {
+                        case 0:
+                            currentIndices[i] = 1;
                             break;
-                        case OFF:
-                            servoStates[i] = ServoState.ON;
+                        case 1:
+                            currentIndices[i] = 0;
                             break;
                     }
-                    intakeServos[i].setPosition(servoPositions[i][servoStates[i].getStateIndex()]);
+                    intakeServos[i].setPosition(servoPositions[i][currentIndices[i]]);
                     servoDebounces[i] = true;
                 }
             }
