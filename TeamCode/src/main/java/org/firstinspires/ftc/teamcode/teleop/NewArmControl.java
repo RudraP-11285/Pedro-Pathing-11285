@@ -164,7 +164,7 @@ public class NewArmControl extends LinearOpMode {
         DEPOS1(new double[]{0.585,1.0,0.45}),
         DEPOS2(new double[]{0.585,1.0,0.71}), // Put servo values here
         DEPOS3(new double[]{0.36,1.0,0.71}),
-        DEPOS4(new double[]{0.36,1.0,0.45});
+        DEPOS4(new double[]{0.36,1.0,0.71});
         // Put other servo values here
         private double[] positions;
         private DeposState(double[] positions) {
